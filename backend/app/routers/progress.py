@@ -6,7 +6,12 @@ from sqlalchemy.orm import Session
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import Challenge, Lesson, Phase, User
-from app.progress import _phase_challenge_ids, _solved_challenge_ids
+from app.progress import (
+    _phase_challenge_ids,
+    _solved_challenge_ids,
+    lessons_with_quiz_in_phase,
+    passed_quiz_lesson_ids,
+)
 from app.schemas import PhaseProgress, ProgressOverview
 
 router = APIRouter(prefix="/api", tags=["progress"])
@@ -18,11 +23,13 @@ def get_progress(
     current_user: User = Depends(get_current_user),
 ):
     solved = _solved_challenge_ids(db, current_user.id)
+    passed_quizzes = passed_quiz_lesson_ids(db, current_user.id)
     phases = db.scalars(select(Phase).order_by(Phase.order)).all()
 
     phase_rows: list[PhaseProgress] = []
     total_challenges = 0
     total_solved = 0
+    total_quizzes_passed = 0
 
     for phase in phases:
         challenge_ids = _phase_challenge_ids(db, phase.id)
@@ -42,10 +49,14 @@ def get_progress(
             if lch and all(c in solved for c in lch):
                 lessons_completed += 1
 
+        quiz_lesson_ids = lessons_with_quiz_in_phase(db, phase.id)
+        quizzes_passed_here = [lid for lid in quiz_lesson_ids if lid in passed_quizzes]
+
         total = len(challenge_ids)
         pct = round(100.0 * len(solved_here) / total, 1) if total else 0.0
         total_challenges += total
         total_solved += len(solved_here)
+        total_quizzes_passed += len(quizzes_passed_here)
 
         phase_rows.append(
             PhaseProgress(
@@ -57,6 +68,8 @@ def get_progress(
                 total_lessons=len(lesson_ids),
                 challenges_solved=len(solved_here),
                 total_challenges=total,
+                quizzes_passed=len(quizzes_passed_here),
+                total_quizzes=len(quiz_lesson_ids),
                 progress_percentage=pct,
             )
         )
@@ -65,5 +78,6 @@ def get_progress(
     return ProgressOverview(
         overall_percentage=overall,
         challenges_solved=total_solved,
+        quizzes_passed=total_quizzes_passed,
         phases=phase_rows,
     )

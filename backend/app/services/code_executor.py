@@ -40,6 +40,19 @@ _SENTINEL = "___TEST_RESULTS_JSON___"
 
 _HARNESS_TEMPLATE = '''\
 import json as _json
+import math as _math
+
+def _approx_equal(a, b):
+    """Compare results, tolerating float rounding, recursively into containers."""
+    if isinstance(a, bool) or isinstance(b, bool):
+        return a is b
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return _math.isclose(a, b, rel_tol=1e-6, abs_tol=1e-9)
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+        return len(a) == len(b) and all(_approx_equal(x, y) for x, y in zip(a, b))
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(_approx_equal(a[k], b[k]) for k in a)
+    return a == b
 
 # ---- learner code ----
 {user_code}
@@ -53,7 +66,7 @@ for _i, _t in enumerate(_tests):
         _expected = eval(_t["expected"])
         _results.append({{
             "test_number": _i + 1,
-            "passed": _actual == _expected,
+            "passed": _approx_equal(_actual, _expected),
             "expected": repr(_expected),
             "actual": repr(_actual),
         }})

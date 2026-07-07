@@ -1,3 +1,6 @@
-# Install this in addition to requirements.txt only when DATABASE_URL points at
-# Postgres/Supabase:  pip install -r requirements-postgres.txt
-psycopg2-binary==2.9.10
+# PostgreSQL driver — install alongside requirements.txt when DATABASE_URL
+# points at Postgres:  pip install -r requirements-postgres.txt
+#
+# We use psycopg 3 (import name: psycopg). SQLAlchemy URL scheme:
+#   postgresql+psycopg://user:password@host:5432/dbname
+psycopg[binary]>=3.2

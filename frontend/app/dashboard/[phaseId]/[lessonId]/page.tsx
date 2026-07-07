@@ -41,6 +41,21 @@ export default function LessonPage({
         </div>
       </article>
 
+      <div className="mt-6 flex items-center justify-between rounded-xl border border-brand-100 bg-brand-50 p-5">
+        <div>
+          <p className="font-semibold">Check your understanding</p>
+          <p className="text-sm text-gray-600">
+            Take the quiz to test the key ideas from this lesson.
+          </p>
+        </div>
+        <Link
+          href={`/dashboard/${phaseId}/${lessonId}/quiz`}
+          className="rounded-md bg-brand-600 px-5 py-2 font-medium text-white hover:bg-brand-700"
+        >
+          Take the quiz →
+        </Link>
+      </div>
+
       {lesson.examples.length > 0 && (
         <section className="mt-8">
           <h2 className="mb-3 text-xl font-bold">Examples</h2>

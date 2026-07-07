@@ -1,25 +1,45 @@
 # AI Study Platform
 
 A hands-on learning platform for a 12-phase AI roadmap (Python Fundamentals →
-Production AI). This repository currently contains a **working Phase 1 vertical
-slice**: sign in, read a lesson, write Python in the browser, run it against
-hidden test cases, and watch your progress update.
+Production AI): sign in, read a lesson, write Python in the browser, run it
+against hidden test cases, and watch your progress update.
 
-## What's built (Phase 1 slice)
+## What's built
 
 | Area | Status |
 | --- | --- |
-| Auth (dev login → JWT; NextAuth seam ready) | ✅ |
-| Phases → Lessons → Challenges content model + seed | ✅ (Phase 1: 2 lessons, 2 challenges) |
+| **Full 12-phase curriculum — 48 lessons, 50 auto-graded challenges** | ✅ |
+| **Quizzes — 144 questions (MC + fill-blank), instant grading + explanations** | ✅ |
+| Auth: dev-login **and** GitHub/Google OAuth (via Authlib) | ✅ |
+| Phases → Lessons → Challenges → Quizzes content model + modular seed | ✅ |
 | In-browser code editor with syntax highlighting | ✅ |
-| Server-side Python execution + test grading | ✅ |
-| Progress tracking (per-phase %, challenges solved) | ✅ |
-| Quizzes, Projects, Community, OAuth, Certificates | ⏳ scaffolded to grow into |
+| Server-side Python execution + test grading (approx float compare) | ✅ |
+| Progress tracking (per-phase %, challenges solved, quizzes passed) | ✅ |
+| PostgreSQL (via psycopg 3) with SQLite fallback | ✅ |
+| **Alembic migrations** (schema versioned, verified in sync) | ✅ |
+| Projects, Community, Certificates | ⏳ scaffolded to grow into |
+
+### The 12 phases
+
+| # | Phase | # | Phase |
+| --- | --- | --- | --- |
+| 1 | Python Fundamentals | 7 | Deep Learning Fundamentals |
+| 2 | Data Structures & Algorithms | 8 | Deep Learning Frameworks |
+| 3 | Math for AI | 9 | Computer Vision |
+| 4 | Data Manipulation (NumPy/Pandas) | 10 | Natural Language Processing |
+| 5 | Data Visualization | 11 | LLMs & Generative AI |
+| 6 | Machine Learning Fundamentals | 12 | Production AI & MLOps |
+
+Every challenge is a pure-Python implementation of a real concept from that phase
+(dot product, gradient-descent step, sigmoid, softmax, scaled dot-product
+attention, cosine-similarity retrieval, moving-average drift monitoring, …), so
+they grade reliably in the sandbox while teaching the actual idea. All 48
+reference solutions are verified to pass their own tests.
 
 ## Tech stack
 
 - **Frontend:** Next.js 14 (App Router) · TypeScript · Tailwind CSS
-- **Backend:** FastAPI · SQLAlchemy · SQLite (swap to Postgres/Supabase via `DATABASE_URL`)
+- **Backend:** FastAPI · SQLAlchemy · **PostgreSQL** (psycopg 3), SQLite fallback
 - **Code execution:** sandboxed Python subprocess (see the security note below)
 
 ## Prerequisites
@@ -38,10 +58,38 @@ cd backend
 python -m venv .venv
 # Windows:  .venv\Scripts\activate       macOS/Linux:  source .venv/bin/activate
 pip install -r requirements.txt
-
-python seed.py                     # load Phase 1 content
-uvicorn app.main:app --reload      # API on :8000  (docs at /docs)
+pip install -r requirements-postgres.txt   # psycopg 3 driver
 ```
+
+**Point at a database.** Copy `.env.example` to `.env`. The default
+`DATABASE_URL` uses Postgres:
+
+```
+DATABASE_URL=postgresql+psycopg://study:study@localhost:5432/study_platform
+```
+
+Create that role + database once (needs your Postgres superuser password):
+
+```bash
+# PowerShell:  $env:PG_SUPERUSER_PASSWORD = "your-postgres-password"
+PG_SUPERUSER_PASSWORD="your-postgres-password" python setup_db.py
+```
+
+> Prefer zero setup? Set `DATABASE_URL=sqlite:///./study_platform.db` in `.env`
+> instead and skip `setup_db.py` — everything else is identical.
+
+**Create the schema, seed, and run:**
+
+```bash
+alembic upgrade head               # create all tables (schema is Alembic-managed)
+python seed.py                     # load 12 phases, 48 lessons, 50 challenges, 144 quiz Qs
+uvicorn app.main:app --reload      # API on :8000
+```
+
+**API docs:** open **`http://localhost:8000/scalar`** — the primary reference UI
+([Scalar](https://scalar.com), a modern Swagger alternative with a built-in
+request playground). Swagger UI (`/docs`) and ReDoc (`/redoc`) are also served
+from the same OpenAPI schema.
 
 ### 2. Frontend → http://localhost:3000
 
@@ -66,17 +114,23 @@ backend/
     database.py        # SQLAlchemy engine/session
     models.py          # User, Phase, Lesson, Challenge, progress, submissions
     schemas.py         # Pydantic request/response models
-    auth.py            # JWT mint/verify (dev-login for now)
-    progress.py        # progress recomputation
-    routers/           # auth, content, execute, progress
+    auth.py            # backend JWT mint/verify
+    oauth.py           # Authlib registry (GitHub/Google)
+    progress.py        # progress recomputation (challenges + quizzes)
+    routers/           # auth, oauth, content, execute, quizzes, progress
     services/
       code_executor.py # runs + grades submissions   <-- SECURITY-SENSITIVE
-  seed.py              # Phase 1 content + demo data
+  alembic/             # migrations (env.py + versions/0001, 0002)
+  alembic.ini
+  seed_data/           # curriculum: phase_01..phase_12 modules + quizzes.py
+  seed.py              # walks seed_data and writes rows (idempotent)
+  setup_db.py          # one-time Postgres role + database bootstrap
   requirements.txt
+  requirements-postgres.txt
 
 frontend/
-  app/                 # landing, dashboard, phase, lesson pages (App Router)
-  components/          # CodeEditor, ProgressBar, Navbar
+  app/                 # landing, dashboard, phase, lesson, quiz, auth pages
+  components/          # CodeEditor, Quiz, ProgressBar, Navbar
   lib/                 # api.ts (typed client), auth.tsx (context)
 ```
 
@@ -95,19 +149,70 @@ environment changes.
 
 Each challenge stores `test_cases` as `{"call": "add(2, 3)", "expected": "5"}`.
 The executor runs the learner's code, then evaluates each `call` and compares it
-to `eval(expected)`. Using a call expression (rather than a fixed `main()`
-signature) lets every challenge name its own function.
+to `eval(expected)` — using an **approximate** comparison for floats (and
+recursively into lists/tuples/dicts), so `mean`, `sigmoid`, `softmax`, and
+cosine-similarity challenges grade robustly. Using a call expression (rather than
+a fixed `main()` signature) lets every challenge name its own function.
 
-## Extending beyond Phase 1
+## Database migrations (Alembic)
 
-- **More content:** add phases/lessons/challenges in `backend/seed.py`.
-- **Quizzes & Projects:** add the models from the spec next to the existing ones
-  in `models.py`, mirror the router pattern in `routers/`.
-- **Real OAuth:** swap `auth.py`'s dev-login for GitHub/Google via NextAuth on
-  the frontend; the JWT shape the backend expects is unchanged.
-- **Postgres/Supabase:** set `DATABASE_URL` and
-  `pip install -r requirements-postgres.txt` (or `docker compose up -d` for a
-  local Postgres).
+The schema is managed by Alembic (`backend/alembic/`), not `create_all`.
+
+```bash
+alembic upgrade head        # apply all migrations
+alembic downgrade -1        # roll back one
+alembic history             # list revisions
+alembic check               # assert models match the DB (CI-friendly)
+alembic revision -m "..."   # start a new migration after changing models.py
+```
+
+Revisions so far: `0001` initial schema · `0002` quiz tables. After editing
+`models.py`, create a new revision and `alembic upgrade head`.
+
+> Reseeding regenerates content with fresh UUIDs, so `seed.py` also clears
+> dependent user rows (submissions, quiz attempts, progress). User **accounts**
+> are preserved.
+
+## Authentication & OAuth
+
+The API is guarded by a backend-issued JWT. Two ways to obtain one:
+
+- **Dev-login** (`POST /api/auth/dev-login`) — no password; always available.
+- **GitHub / Google OAuth** (Authlib) — set the client credentials in
+  `backend/.env` (`GITHUB_CLIENT_ID/SECRET`, `GOOGLE_CLIENT_ID/SECRET`). The
+  flow: the SPA hits `/api/auth/login/{provider}` → provider → backend
+  `/api/auth/callback/{provider}` upserts the user, mints the JWT, and redirects
+  to the frontend `/auth/callback?token=…`.
+
+`GET /api/auth/providers` reports which providers are configured; the sign-in
+page shows only those. Unconfigured providers return `503` and dev-login still
+works, so the app runs with zero OAuth setup.
+
+Callback URLs to register with the providers:
+`http://localhost:8000/api/auth/callback/github` and `.../google`.
+
+## Adding & editing content
+
+Content lives in `backend/seed_data/`:
+
+- One module per phase (`phase_01_python.py` … `phase_12_production.py`), each
+  exporting a `PHASE` dict of lessons and challenges (schema docstring in
+  `seed_data/__init__.py`).
+- `quizzes.py` — quiz questions keyed by `(phase_number, lesson_number)`.
+
+To add or change content, edit the module and re-run `python seed.py`. Every
+challenge ships a `solution_code`; keep the invariant that the solution passes
+its own `test_cases` (all 50 are verified to).
+
+## Extending the platform
+
+- **Projects:** add `Project` / `UserProjectSubmission` models next to the
+  existing ones in `models.py`, a migration, and a router mirroring
+  `challenges` + `execute`.
+- **Certificates / community:** new tables + routers following the same pattern.
+- **Supabase / hosted Postgres:** point `DATABASE_URL` at the hosted instance —
+  no code changes; run `alembic upgrade head` there. (`setup_db.py` is only for
+  creating a local role/database.)
 
 ## Deployment sketch
 

@@ -14,8 +14,10 @@ from app.models import (
     Challenge,
     Lesson,
     Phase,
+    QuizQuestion,
     UserChallengeSubmission,
     UserProgress,
+    UserQuizAttempt,
 )
 
 
@@ -27,6 +29,31 @@ def _solved_challenge_ids(db: Session, user_id: str) -> set[str]:
         )
     ).all()
     return set(rows)
+
+
+PASS_THRESHOLD = 80
+
+
+def passed_quiz_lesson_ids(db: Session, user_id: str) -> set[str]:
+    """Lessons where the user has at least one quiz attempt scoring >= 80."""
+    rows = db.scalars(
+        select(UserQuizAttempt.lesson_id).where(
+            UserQuizAttempt.user_id == user_id,
+            UserQuizAttempt.score >= PASS_THRESHOLD,
+        )
+    ).all()
+    return set(rows)
+
+
+def lessons_with_quiz_in_phase(db: Session, phase_id: str) -> list[str]:
+    """Distinct lesson ids in a phase that actually have quiz questions."""
+    rows = db.scalars(
+        select(QuizQuestion.lesson_id)
+        .join(Lesson, QuizQuestion.lesson_id == Lesson.id)
+        .where(Lesson.phase_id == phase_id)
+        .distinct()
+    ).all()
+    return list(rows)
 
 
 def _phase_challenge_ids(db: Session, phase_id: str) -> list[str]:

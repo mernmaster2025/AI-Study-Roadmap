@@ -56,9 +56,10 @@ export default function DashboardPage() {
       </div>
 
       {progress && (
-        <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatCard label="Overall completion" value={`${progress.overall_percentage}%`} icon="🎯" />
           <StatCard label="Challenges solved" value={progress.challenges_solved} icon="✅" />
+          <StatCard label="Quizzes passed" value={progress.quizzes_passed} icon="🧠" />
           <StatCard label="Phases" value={phases.length} icon="🗺️" />
         </div>
       )}
@@ -86,6 +87,8 @@ export default function DashboardPage() {
                   <div className="mb-1 flex justify-between text-xs text-gray-500">
                     <span>
                       {pp.challenges_solved}/{pp.total_challenges} challenges
+                      {pp.total_quizzes > 0 &&
+                        ` · ${pp.quizzes_passed}/${pp.total_quizzes} quizzes`}
                     </span>
                     <span>{pp.progress_percentage}%</span>
                   </div>

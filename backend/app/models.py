@@ -47,6 +47,9 @@ class User(Base):
     submissions: Mapped[list["UserChallengeSubmission"]] = relationship(
         back_populates="user"
     )
+    quiz_attempts: Mapped[list["UserQuizAttempt"]] = relationship(
+        back_populates="user"
+    )
 
 
 class Phase(Base):
@@ -82,6 +85,9 @@ class Lesson(Base):
     challenges: Mapped[list["Challenge"]] = relationship(
         back_populates="lesson", order_by="Challenge.order"
     )
+    quiz_questions: Mapped[list["QuizQuestion"]] = relationship(
+        back_populates="lesson", order_by="QuizQuestion.order"
+    )
 
 
 class Challenge(Base):
@@ -100,6 +106,36 @@ class Challenge(Base):
     order: Mapped[int] = mapped_column(Integer, default=0)
 
     lesson: Mapped["Lesson"] = relationship(back_populates="challenges")
+
+
+class QuizQuestion(Base):
+    __tablename__ = "quiz_questions"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    lesson_id: Mapped[str] = mapped_column(ForeignKey("lessons.id"), index=True)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+    # "multiple-choice" | "fill-blank"
+    type: Mapped[str] = mapped_column(String, default="multiple-choice")
+    text: Mapped[str] = mapped_column(Text)
+    options: Mapped[list] = mapped_column(JSON, default=list)  # [] for fill-blank
+    correct_answer: Mapped[str] = mapped_column(Text)
+    explanation: Mapped[str] = mapped_column(Text, default="")
+
+    lesson: Mapped["Lesson"] = relationship(back_populates="quiz_questions")
+
+
+class UserQuizAttempt(Base):
+    __tablename__ = "user_quiz_attempts"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    lesson_id: Mapped[str] = mapped_column(ForeignKey("lessons.id"), index=True)
+    answers: Mapped[dict] = mapped_column(JSON, default=dict)  # question_id -> answer
+    score: Mapped[int] = mapped_column(Integer, default=0)  # 0-100
+    attempts: Mapped[int] = mapped_column(Integer, default=1)
+    submitted_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+    user: Mapped["User"] = relationship(back_populates="quiz_attempts")
 
 
 class UserProgress(Base):

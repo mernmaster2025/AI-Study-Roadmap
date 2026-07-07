@@ -102,6 +102,45 @@ class ExecuteCodeResponse(BaseModel):
     score: int = 0
 
 
+# ---- Quizzes ----
+class QuizQuestionOut(ORMModel):
+    id: str
+    order: int
+    type: str
+    text: str
+    options: list
+    # correct_answer and explanation are intentionally omitted from the public
+    # payload so answers aren't shipped to the browser before submission.
+
+
+class QuizOut(BaseModel):
+    lesson_id: str
+    questions: list[QuizQuestionOut]
+
+
+class QuizSubmission(BaseModel):
+    # question_id -> the user's answer
+    answers: dict[str, str]
+
+
+class QuizQuestionResult(BaseModel):
+    id: str
+    text: str
+    user_answer: str | None
+    correct_answer: str
+    correct: bool
+    explanation: str
+
+
+class QuizResult(BaseModel):
+    score: int  # 0-100
+    passed: bool  # score >= 80
+    correct_count: int
+    total: int
+    attempts: int
+    detailed_results: list[QuizQuestionResult]
+
+
 # ---- Progress ----
 class PhaseProgress(BaseModel):
     phase_id: str
@@ -112,12 +151,15 @@ class PhaseProgress(BaseModel):
     total_lessons: int
     challenges_solved: int
     total_challenges: int
+    quizzes_passed: int
+    total_quizzes: int
     progress_percentage: float
 
 
 class ProgressOverview(BaseModel):
     overall_percentage: float
     challenges_solved: int
+    quizzes_passed: int
     phases: list[PhaseProgress]
 
 

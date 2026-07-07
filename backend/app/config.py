@@ -24,6 +24,24 @@ class Settings(BaseSettings):
     # CORS — the Next.js dev server
     frontend_origin: str = "http://localhost:3000"
 
+    # OAuth (optional). Leave blank to disable a provider; the login endpoints
+    # then return 503 and dev-login remains the way in.
+    github_client_id: str = ""
+    github_client_secret: str = ""
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    # Where the backend redirects after a successful OAuth login (a frontend
+    # page that reads ?token=... and stores it).
+    oauth_success_path: str = "/auth/callback"
+
+    @property
+    def github_enabled(self) -> bool:
+        return bool(self.github_client_id and self.github_client_secret)
+
+    @property
+    def google_enabled(self) -> bool:
+        return bool(self.google_client_id and self.google_client_secret)
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -1,7 +1,12 @@
 // Typed client for the FastAPI backend.
 
-const API_BASE =
+export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+/** Full-page redirect target to start an OAuth login with a provider. */
+export function oauthLoginUrl(provider: string): string {
+  return `${API_BASE}/api/auth/login/${provider}`;
+}
 
 const TOKEN_KEY = "asp_token";
 
@@ -124,13 +129,53 @@ export interface PhaseProgress {
   total_lessons: number;
   challenges_solved: number;
   total_challenges: number;
+  quizzes_passed: number;
+  total_quizzes: number;
   progress_percentage: number;
 }
 
 export interface ProgressOverview {
   overall_percentage: number;
   challenges_solved: number;
+  quizzes_passed: number;
   phases: PhaseProgress[];
+}
+
+// ---- Quizzes ----
+export interface QuizQuestion {
+  id: string;
+  order: number;
+  type: "multiple-choice" | "fill-blank";
+  text: string;
+  options: string[];
+}
+
+export interface Quiz {
+  lesson_id: string;
+  questions: QuizQuestion[];
+}
+
+export interface QuizQuestionResult {
+  id: string;
+  text: string;
+  user_answer: string | null;
+  correct_answer: string;
+  correct: boolean;
+  explanation: string;
+}
+
+export interface QuizResult {
+  score: number;
+  passed: boolean;
+  correct_count: number;
+  total: number;
+  attempts: number;
+  detailed_results: QuizQuestionResult[];
+}
+
+export interface OAuthProviders {
+  github: boolean;
+  google: boolean;
 }
 
 // ---- Endpoints ----
@@ -150,4 +195,11 @@ export const api = {
       body: JSON.stringify({ challenge_id: challengeId, code }),
     }),
   progress: () => request<ProgressOverview>("/api/progress"),
+  quiz: (lessonId: string) => request<Quiz>(`/api/lessons/${lessonId}/quiz`),
+  submitQuiz: (lessonId: string, answers: Record<string, string>) =>
+    request<QuizResult>(`/api/lessons/${lessonId}/quiz/submit`, {
+      method: "POST",
+      body: JSON.stringify({ answers }),
+    }),
+  oauthProviders: () => request<OAuthProviders>("/api/auth/providers"),
 };
