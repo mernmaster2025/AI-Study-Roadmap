@@ -21,8 +21,20 @@ class Settings(BaseSettings):
     code_timeout_seconds: int = 5
     max_code_length: int = 20_000
 
-    # CORS — the Next.js dev server
+    # Frontend base URL — used to build OAuth redirect targets (single value).
     frontend_origin: str = "http://localhost:3000"
+
+    # Origins allowed by CORS (comma-separated). Use this for explicit
+    # production origins.
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+
+    # Regex fallback so any local dev port works (Next.js hops to 3001, 3002…
+    # when a port is taken). Set to "" to disable in production.
+    cors_origin_regex: str = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     # OAuth (optional). Leave blank to disable a provider; the login endpoints
     # then return 503 and dev-login remains the way in.

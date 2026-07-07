@@ -22,7 +22,6 @@ from app.models import (
     UserQuizAttempt,
 )
 from seed_data import PHASES
-from seed_data.quizzes import QUIZZES
 
 
 def reset_content(db):
@@ -80,10 +79,8 @@ def seed():
                 db.flush()
                 n_lessons += 1
 
-                # Attach the lesson's quiz (keyed by phase/lesson number).
-                quiz = QUIZZES.get(
-                    (phase_data["phase_number"], l_index + 1), []
-                )
+                # Attach the lesson's quiz (inline in the lesson data).
+                quiz = lesson_data.get("quiz", [])
                 for q_index, q in enumerate(quiz):
                     db.add(
                         QuizQuestion(

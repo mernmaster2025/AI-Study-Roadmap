@@ -1,6 +1,10 @@
-"""Full 12-phase AI study curriculum.
+"""Curriculum content source.
 
-Each phase lives in its own module exposing a ``PHASE`` dict with this shape::
+The full 12-phase curriculum lives in ``curriculum.json`` (one object per phase)
+and is loaded here as ``PHASES``. It was authored by a multi-agent workflow and
+every challenge's ``solution_code`` is verified to pass its own ``test_cases``.
+
+Schema of each phase::
 
     {
       "phase_number": int,
@@ -13,54 +17,27 @@ Each phase lives in its own module exposing a ``PHASE`` dict with this shape::
           "description": str,
           "estimated_minutes": int,
           "content_markdown": str,
-          "examples": [{"title": str, "language": str, "code": str}],
-          "challenges": [
-            {
-              "title": str,
-              "description": str,
-              "starter_code": str,
-              "difficulty": "easy" | "medium" | "hard",
-              "hints": [str, ...],
-              "solution_code": str,
-              # Each test evaluates ``call`` and compares (approx) to eval(expected).
-              "test_cases": [{"call": str, "expected": str}, ...],
-            },
-            ...
-          ],
-        },
-        ...
-      ],
+          "examples":   [{"title": str, "language": str, "code": str}],
+          "challenges": [{"title","description","starter_code","difficulty",
+                          "hints":[str],"solution_code",
+                          "test_cases":[{"call","expected"}]}],
+          "quiz":       [{"type","text","options":[str],"correct_answer",
+                          "explanation"}]
+        }
+      ]
     }
 
-``seed.py`` consumes ``PHASES`` and derives ordering from list position, so the
-content modules never hard-code ``order`` fields.
+To edit content, change ``curriculum.json`` and re-run ``python seed.py``.
 """
-from seed_data import (
-    phase_01_python,
-    phase_02_dsa,
-    phase_03_math,
-    phase_04_data,
-    phase_05_viz,
-    phase_06_ml,
-    phase_07_deep_learning,
-    phase_08_frameworks,
-    phase_09_computer_vision,
-    phase_10_nlp,
-    phase_11_llms,
-    phase_12_production,
-)
+import json
+from pathlib import Path
 
-PHASES = [
-    phase_01_python.PHASE,
-    phase_02_dsa.PHASE,
-    phase_03_math.PHASE,
-    phase_04_data.PHASE,
-    phase_05_viz.PHASE,
-    phase_06_ml.PHASE,
-    phase_07_deep_learning.PHASE,
-    phase_08_frameworks.PHASE,
-    phase_09_computer_vision.PHASE,
-    phase_10_nlp.PHASE,
-    phase_11_llms.PHASE,
-    phase_12_production.PHASE,
-]
+_DATA_FILE = Path(__file__).with_name("curriculum.json")
+
+if not _DATA_FILE.exists():
+    raise FileNotFoundError(
+        f"{_DATA_FILE} is missing. The curriculum content is required to seed "
+        "the database."
+    )
+
+PHASES = json.loads(_DATA_FILE.read_text(encoding="utf-8"))

@@ -8,8 +8,8 @@ against hidden test cases, and watch your progress update.
 
 | Area | Status |
 | --- | --- |
-| **Full 12-phase curriculum — 48 lessons, 50 auto-graded challenges** | ✅ |
-| **Quizzes — 144 questions (MC + fill-blank), instant grading + explanations** | ✅ |
+| **Full 12-phase curriculum — 106 lessons, 66 auto-graded challenges** | ✅ |
+| **Quizzes — 318 questions (MC + fill-blank), instant grading + explanations** | ✅ |
 | Auth: dev-login **and** GitHub/Google OAuth (via Authlib) | ✅ |
 | Phases → Lessons → Challenges → Quizzes content model + modular seed | ✅ |
 | In-browser code editor with syntax highlighting | ✅ |
@@ -21,20 +21,23 @@ against hidden test cases, and watch your progress update.
 
 ### The 12 phases
 
-| # | Phase | # | Phase |
+| # | Phase (lessons) | # | Phase (lessons) |
 | --- | --- | --- | --- |
-| 1 | Python Fundamentals | 7 | Deep Learning Fundamentals |
-| 2 | Data Structures & Algorithms | 8 | Deep Learning Frameworks |
-| 3 | Math for AI | 9 | Computer Vision |
-| 4 | Data Manipulation (NumPy/Pandas) | 10 | Natural Language Processing |
-| 5 | Data Visualization | 11 | LLMs & Generative AI |
-| 6 | Machine Learning Fundamentals | 12 | Production AI & MLOps |
+| 1 | Python Fundamentals (16) | 7 | Natural Language Processing (6) |
+| 2 | Computer Science Basics (11) | 8 | Large Language Models (9) |
+| 3 | Mathematics for AI (13) | 9 | AI Engineering (8) |
+| 4 | Python for Data Science (5) | 10 | MLOps (7) |
+| 5 | Machine Learning (9) | 11 | AI Agents (5) |
+| 6 | Deep Learning (9) | 12 | Production AI (8) |
 
-Every challenge is a pure-Python implementation of a real concept from that phase
-(dot product, gradient-descent step, sigmoid, softmax, scaled dot-product
-attention, cosine-similarity retrieval, moving-average drift monitoring, …), so
-they grade reliably in the sandbox while teaching the actual idea. All 48
-reference solutions are verified to pass their own tests.
+Each **topic** is its own richly-explained lesson (250–450 words + worked
+examples + a 3-question quiz). The code-heavy phases (1–8) also carry
+auto-graded, standard-library challenges; the infra/ops phases (9–12) are
+explanation + examples + quizzes. All **66** challenge reference solutions are
+verified to pass their own tests.
+
+> The curriculum was authored by a 12-agent workflow (one per phase) and lives in
+> [backend/seed_data/curriculum.json](backend/seed_data/curriculum.json).
 
 ## Tech stack
 
@@ -82,7 +85,7 @@ PG_SUPERUSER_PASSWORD="your-postgres-password" python setup_db.py
 
 ```bash
 alembic upgrade head               # create all tables (schema is Alembic-managed)
-python seed.py                     # load 12 phases, 48 lessons, 50 challenges, 144 quiz Qs
+python seed.py                     # load 12 phases, 106 lessons, 66 challenges, 318 quiz Qs
 uvicorn app.main:app --reload      # API on :8000
 ```
 
@@ -122,8 +125,8 @@ backend/
       code_executor.py # runs + grades submissions   <-- SECURITY-SENSITIVE
   alembic/             # migrations (env.py + versions/0001, 0002)
   alembic.ini
-  seed_data/           # curriculum: phase_01..phase_12 modules + quizzes.py
-  seed.py              # walks seed_data and writes rows (idempotent)
+  seed_data/           # curriculum.json (all content) + loader
+  seed.py              # walks the curriculum and writes rows (idempotent)
   setup_db.py          # one-time Postgres role + database bootstrap
   requirements.txt
   requirements-postgres.txt
@@ -193,16 +196,14 @@ Callback URLs to register with the providers:
 
 ## Adding & editing content
 
-Content lives in `backend/seed_data/`:
+All content lives in one file: **`backend/seed_data/curriculum.json`** — a list
+of 12 phase objects, each with lessons that carry `content_markdown`, `examples`,
+`challenges`, and an inline `quiz` (schema docstring in `seed_data/__init__.py`).
 
-- One module per phase (`phase_01_python.py` … `phase_12_production.py`), each
-  exporting a `PHASE` dict of lessons and challenges (schema docstring in
-  `seed_data/__init__.py`).
-- `quizzes.py` — quiz questions keyed by `(phase_number, lesson_number)`.
-
-To add or change content, edit the module and re-run `python seed.py`. Every
-challenge ships a `solution_code`; keep the invariant that the solution passes
-its own `test_cases` (all 50 are verified to).
+To add or change content, edit `curriculum.json` and re-run `python seed.py`.
+Every challenge ships a `solution_code`; keep the invariant that the solution
+passes its own `test_cases` (all 66 are verified to). The repo includes the
+verify/repair pass used to enforce that after generation.
 
 ## Extending the platform
 
