@@ -1,0 +1,3 @@
+# Install this in addition to requirements.txt only when DATABASE_URL points at
+# Postgres/Supabase:  pip install -r requirements-postgres.txt
+psycopg2-binary==2.9.10

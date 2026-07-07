@@ -1,0 +1,9 @@
+# Version floors chosen so prebuilt wheels exist for current Python (incl. 3.14).
+# Pin these exactly once you settle on a deployment Python version.
+fastapi>=0.115
+uvicorn[standard]>=0.34
+sqlalchemy>=2.0.36
+pydantic>=2.11
+pydantic-settings>=2.7
+email-validator>=2.2
+python-jose[cryptography]>=3.3
