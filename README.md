@@ -138,6 +138,36 @@ frontend/
   lib/                 # api.ts (typed client), auth.tsx (context)
 ```
 
+## Admin panel (`admin/`)
+
+A separate Next.js app (port **3001**) for managing the platform, backed by
+admin-only `/api/admin/*` endpoints (guarded by `require_admin`).
+
+**Features:** dashboard stats · users (search, toggle admin, delete) · full
+content CRUD (phases → lessons → challenges → quiz questions, with answers
+visible for editing) · recent submissions.
+
+**Make yourself an admin, then run it:**
+
+```bash
+cd backend
+python make_admin.py you@example.com "Your Name" "your-password"   # promote/create an admin
+
+cd ../admin
+npm install
+cp .env.local.example .env.local    # points at http://localhost:8000
+npm run dev                          # http://localhost:3001
+```
+
+Sign in at `http://localhost:3001` with that admin email/password. Non-admin
+accounts are rejected. The `is_admin` flag lives on the User row (migration
+`0004`); promote/demote users from the panel or via `make_admin.py`.
+
+> Editing content here writes **live** to the database. Re-running `seed.py`
+> reloads everything from `curriculum.json` and overwrites those edits — treat
+> `curriculum.json` as the source of truth for bulk content, and the panel for
+> targeted live fixes.
+
 ## ⚠️ Security note on code execution
 
 `backend/app/services/code_executor.py` runs untrusted learner code in a

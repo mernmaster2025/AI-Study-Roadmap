@@ -9,6 +9,9 @@ backend/.env
 frontend/node_modules/
 frontend/.next/
 frontend/.env.local
+admin/node_modules/
+admin/.next/
+admin/.env.local
 
 # OS / editor
 .DS_Store

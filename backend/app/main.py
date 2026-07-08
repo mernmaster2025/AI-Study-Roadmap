@@ -5,7 +5,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
 from app.docs import API_DESCRIPTION, OPENAPI_TAGS, scalar_html
-from app.routers import auth, content, execute, oauth, progress, quizzes
+from app.routers import admin, auth, content, execute, oauth, progress, quizzes
 
 settings = get_settings()
 
@@ -38,6 +38,7 @@ app.include_router(content.router)
 app.include_router(execute.router)
 app.include_router(quizzes.router)
 app.include_router(progress.router)
+app.include_router(admin.router)
 
 
 @app.get("/scalar", include_in_schema=False)

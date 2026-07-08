@@ -39,6 +39,7 @@ class UserOut(ORMModel):
     name: str
     avatar_url: str | None = None
     bio: str | None = None
+    is_admin: bool = False
 
 
 # ---- Content ----
@@ -172,6 +173,171 @@ class ProgressOverview(BaseModel):
     challenges_solved: int
     quizzes_passed: int
     phases: list[PhaseProgress]
+
+
+# ---- Admin ----
+class AdminStats(BaseModel):
+    users: int
+    admins: int
+    phases: int
+    lessons: int
+    challenges: int
+    quiz_questions: int
+    submissions: int
+    passed_submissions: int
+    quiz_attempts: int
+
+
+class AdminUserOut(ORMModel):
+    id: str
+    email: str
+    name: str
+    is_admin: bool
+    avatar_url: str | None = None
+    created_at: datetime
+    has_password: bool = False
+
+
+class UserUpdate(BaseModel):
+    name: str | None = None
+    is_admin: bool | None = None
+
+
+class PhaseIn(BaseModel):
+    phase_number: int
+    title: str
+    description: str = ""
+    estimated_hours: int = 0
+    order: int = 0
+
+
+class PhaseUpdate(BaseModel):
+    phase_number: int | None = None
+    title: str | None = None
+    description: str | None = None
+    estimated_hours: int | None = None
+    order: int | None = None
+
+
+class AdminPhaseOut(ORMModel):
+    id: str
+    phase_number: int
+    title: str
+    description: str
+    estimated_hours: int
+    order: int
+    lesson_count: int = 0
+
+
+class LessonIn(BaseModel):
+    phase_id: str
+    lesson_number: int
+    title: str
+    description: str = ""
+    content_markdown: str = ""
+    examples: list = []
+    estimated_minutes: int = 0
+    order: int = 0
+
+
+class LessonUpdate(BaseModel):
+    lesson_number: int | None = None
+    title: str | None = None
+    description: str | None = None
+    content_markdown: str | None = None
+    examples: list | None = None
+    estimated_minutes: int | None = None
+    order: int | None = None
+
+
+class AdminLessonOut(ORMModel):
+    id: str
+    phase_id: str
+    lesson_number: int
+    title: str
+    description: str
+    content_markdown: str
+    examples: list
+    estimated_minutes: int
+    order: int
+
+
+class ChallengeIn(BaseModel):
+    lesson_id: str
+    title: str
+    description: str = ""
+    starter_code: str = ""
+    test_cases: list = []
+    difficulty: str = "easy"
+    hints: list = []
+    solution_code: str = ""
+    order: int = 0
+
+
+class ChallengeUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    starter_code: str | None = None
+    test_cases: list | None = None
+    difficulty: str | None = None
+    hints: list | None = None
+    solution_code: str | None = None
+    order: int | None = None
+
+
+class AdminChallengeOut(ORMModel):
+    id: str
+    lesson_id: str
+    title: str
+    description: str
+    starter_code: str
+    test_cases: list
+    difficulty: str
+    hints: list
+    solution_code: str
+    order: int
+
+
+class QuizQuestionIn(BaseModel):
+    lesson_id: str
+    order: int = 0
+    type: str = "multiple-choice"
+    text: str
+    options: list = []
+    correct_answer: str
+    explanation: str = ""
+
+
+class QuizQuestionUpdate(BaseModel):
+    order: int | None = None
+    type: str | None = None
+    text: str | None = None
+    options: list | None = None
+    correct_answer: str | None = None
+    explanation: str | None = None
+
+
+class AdminQuizQuestionOut(ORMModel):
+    id: str
+    lesson_id: str
+    order: int
+    type: str
+    text: str
+    options: list
+    correct_answer: str
+    explanation: str
+
+
+class AdminSubmissionOut(BaseModel):
+    id: str
+    user_id: str
+    user_email: str
+    challenge_id: str
+    challenge_title: str
+    status: str
+    score: int
+    attempts: int
+    submitted_at: datetime
 
 
 TokenResponse.model_rebuild()
