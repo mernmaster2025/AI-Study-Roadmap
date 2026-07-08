@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Shell from "@/components/Shell";
 import { api, type Challenge, type Lesson, type QuizQuestion } from "@/lib/api";
+import MarkdownEditor from "@/components/MarkdownEditor";
 
 export default function LessonAdminPage({
   params,
@@ -88,18 +89,22 @@ function LessonAdmin({ phaseId, lessonId }: { phaseId: string; lessonId: string 
               className="w-full rounded-md border p-2" />
           </label>
         </div>
-        <label className="block text-sm">
+        <div className="text-sm">
           <span className="mb-1 block text-gray-500">Description (Markdown — beginner intro)</span>
-          <textarea value={lesson.description}
-            onChange={(e) => setLesson({ ...lesson, description: e.target.value })}
-            className="h-40 w-full rounded-md border p-2 font-mono text-xs" />
-        </label>
-        <label className="block text-sm">
+          <MarkdownEditor
+            value={lesson.description}
+            onChange={(v) => setLesson({ ...lesson, description: v })}
+            minHeight={180}
+          />
+        </div>
+        <div className="text-sm">
           <span className="mb-1 block text-gray-500">Content (Markdown — deep dive)</span>
-          <textarea value={lesson.content_markdown}
-            onChange={(e) => setLesson({ ...lesson, content_markdown: e.target.value })}
-            className="h-72 w-full rounded-md border p-2 font-mono text-xs" />
-        </label>
+          <MarkdownEditor
+            value={lesson.content_markdown}
+            onChange={(v) => setLesson({ ...lesson, content_markdown: v })}
+            minHeight={320}
+          />
+        </div>
         <div className="flex items-center gap-3">
           <button onClick={saveLesson}
             className="rounded-md bg-brand-600 px-5 py-2 text-sm font-medium text-white hover:bg-brand-700">
@@ -197,8 +202,14 @@ function ChallengeEditor({ challenge, onChanged }: { challenge: Challenge; onCha
           <option value="hard">hard</option>
         </select>
       </div>
-      <textarea value={c.description} onChange={(e) => setC({ ...c, description: e.target.value })}
-        placeholder="Description" className="mb-2 h-16 w-full rounded-md border p-2 text-xs" />
+      <div className="mb-2">
+        <MarkdownEditor
+          value={c.description}
+          onChange={(v) => setC({ ...c, description: v })}
+          minHeight={90}
+          placeholder="Challenge description (Markdown)"
+        />
+      </div>
       <div className="grid gap-2 md:grid-cols-2">
         <textarea value={c.starter_code} onChange={(e) => setC({ ...c, starter_code: e.target.value })}
           placeholder="starter_code" className="h-24 w-full rounded-md border bg-gray-900 p-2 font-mono text-xs text-gray-100" />

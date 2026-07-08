@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Shell from "@/components/Shell";
 import { api, type Lesson, type Phase } from "@/lib/api";
+import MarkdownEditor from "@/components/MarkdownEditor";
 
 export default function PhaseAdminPage({
   params,
@@ -98,12 +99,14 @@ function PhaseAdmin({ phaseId }: { phaseId: string }) {
               className="w-full rounded-md border p-2" />
           </label>
         </div>
-        <label className="block text-sm">
+        <div className="text-sm">
           <span className="mb-1 block text-gray-500">Description (Markdown)</span>
-          <textarea value={phase.description}
-            onChange={(e) => setPhase({ ...phase, description: e.target.value })}
-            className="h-40 w-full rounded-md border p-2 font-mono text-xs" />
-        </label>
+          <MarkdownEditor
+            value={phase.description}
+            onChange={(v) => setPhase({ ...phase, description: v })}
+            minHeight={200}
+          />
+        </div>
         <div className="flex items-center gap-3">
           <button onClick={savePhase}
             className="rounded-md bg-brand-600 px-5 py-2 text-sm font-medium text-white hover:bg-brand-700">
