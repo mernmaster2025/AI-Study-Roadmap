@@ -8,8 +8,8 @@ against hidden test cases, and watch your progress update.
 
 | Area | Status |
 | --- | --- |
-| **Full 12-phase curriculum — 106 lessons, 66 auto-graded challenges** | ✅ |
-| **Quizzes — 318 questions (MC + fill-blank), instant grading + explanations** | ✅ |
+| **Full 12-phase curriculum — 106 lessons, 289 auto-graded challenges** | ✅ |
+| **Quizzes — 633 questions (MC + fill-blank), instant grading + explanations** | ✅ |
 | Auth: dev-login **and** GitHub/Google OAuth (via Authlib) | ✅ |
 | Phases → Lessons → Challenges → Quizzes content model + modular seed | ✅ |
 | In-browser code editor with syntax highlighting | ✅ |
@@ -30,11 +30,12 @@ against hidden test cases, and watch your progress update.
 | 5 | Machine Learning (9) | 11 | AI Agents (5) |
 | 6 | Deep Learning (9) | 12 | Production AI (8) |
 
-Each **topic** is its own richly-explained lesson (250–450 words + worked
-examples + a 3-question quiz). The code-heavy phases (1–8) also carry
-auto-graded, standard-library challenges; the infra/ops phases (9–12) are
-explanation + examples + quizzes. All **66** challenge reference solutions are
-verified to pass their own tests.
+Each **topic** is its own deeply-explained lesson (~600–800 words with `## Key
+ideas`, a step-by-step example walk-through, `## Common pitfalls`, and `## Why it
+matters for AI`), plus **1–3 auto-graded challenges** of increasing difficulty
+and a **5–6 question quiz**. Even the infra/ops phases (9–12) carry stdlib "logic"
+challenges (rate limiters, LRU cache, batching, drift scores, …). All **289**
+challenge reference solutions are verified to pass their own tests.
 
 > The curriculum was authored by a 12-agent workflow (one per phase) and lives in
 > [backend/seed_data/curriculum.json](backend/seed_data/curriculum.json).
@@ -85,7 +86,7 @@ PG_SUPERUSER_PASSWORD="your-postgres-password" python setup_db.py
 
 ```bash
 alembic upgrade head               # create all tables (schema is Alembic-managed)
-python seed.py                     # load 12 phases, 106 lessons, 66 challenges, 318 quiz Qs
+python seed.py                     # load 12 phases, 106 lessons, 289 challenges, 633 quiz Qs
 uvicorn app.main:app --reload      # API on :8000
 ```
 
@@ -112,7 +113,7 @@ progress is saved.
 ```
 backend/
   app/
-    main.py            # FastAPI app + CORS + table creation
+    main.py            # FastAPI app + CORS + session middleware + Scalar docs
     config.py          # env-driven settings
     database.py        # SQLAlchemy engine/session
     models.py          # User, Phase, Lesson, Challenge, progress, submissions
@@ -202,7 +203,7 @@ of 12 phase objects, each with lessons that carry `content_markdown`, `examples`
 
 To add or change content, edit `curriculum.json` and re-run `python seed.py`.
 Every challenge ships a `solution_code`; keep the invariant that the solution
-passes its own `test_cases` (all 66 are verified to). The repo includes the
+passes its own `test_cases` (all 289 are verified to). The repo includes the
 verify/repair pass used to enforce that after generation.
 
 ## Extending the platform
