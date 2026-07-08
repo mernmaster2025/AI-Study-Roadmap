@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Highlight, themes } from "prism-react-renderer";
 import {
   Box,
   Divider,
@@ -28,6 +29,46 @@ interface Props {
   minHeight?: number;
   placeholder?: string;
 }
+
+// Syntax-highlight fenced code blocks in the preview.
+const mdComponents: Components = {
+  pre: ({ children }) => <>{children}</>,
+  code({ className, children, ...props }) {
+    const match = /language-(\w+)/.exec(className || "");
+    const text = String(children).replace(/\n$/, "");
+    if (!match) {
+      return (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    }
+    return (
+      <Highlight theme={themes.vsDark} code={text} language={match[1]}>
+        {({ style, tokens, getLineProps, getTokenProps }) => (
+          <pre
+            style={{
+              ...style,
+              margin: "0.6em 0",
+              padding: "0.8em 1em",
+              borderRadius: 10,
+              overflow: "auto",
+              fontSize: 12.5,
+            }}
+          >
+            {tokens.map((line, i) => (
+              <div key={i} {...getLineProps({ line })}>
+                {line.map((token, k) => (
+                  <span key={k} {...getTokenProps({ token })} />
+                ))}
+              </div>
+            ))}
+          </pre>
+        )}
+      </Highlight>
+    );
+  },
+};
 
 export default function MarkdownEditor({
   value,
@@ -156,7 +197,9 @@ export default function MarkdownEditor({
       ) : (
         <Box className="md-preview" sx={{ p: 2, minHeight, overflow: "auto" }}>
           {value.trim() ? (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+              {value}
+            </ReactMarkdown>
           ) : (
             <Box sx={{ color: "text.disabled" }}>Nothing to preview.</Box>
           )}
