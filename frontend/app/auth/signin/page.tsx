@@ -62,12 +62,12 @@ export default function SignInPage() {
       <h1 className="mb-1 text-2xl font-bold">
         {mode === "login" ? "Sign in" : "Create your account"}
       </h1>
-      <p className="mb-6 text-gray-600">
+      <p className="mb-6 text-gray-600 dark:text-gray-400">
         Track your progress across the roadmap.
       </p>
 
       {/* Login / Register toggle */}
-      <div className="mb-6 grid grid-cols-2 rounded-lg bg-gray-100 p-1 text-sm font-medium">
+      <div className="mb-6 grid grid-cols-2 rounded-lg bg-gray-100 p-1 text-sm font-medium dark:bg-gray-800">
         {(["login", "register"] as Mode[]).map((m) => (
           <button
             key={m}
@@ -76,7 +76,9 @@ export default function SignInPage() {
               setError(null);
             }}
             className={`rounded-md py-2 transition ${
-              mode === m ? "bg-white shadow" : "text-gray-500 hover:text-gray-800"
+              mode === m
+                ? "bg-white shadow dark:bg-gray-900"
+                : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
             }`}
           >
             {m === "login" ? "Sign in" : "Create account"}
@@ -92,7 +94,7 @@ export default function SignInPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Name"
-            className="w-full rounded-lg border p-3"
+            className="w-full rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900"
           />
         )}
         <input
@@ -102,7 +104,7 @@ export default function SignInPage() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
           autoComplete="email"
-          className="w-full rounded-lg border p-3"
+          className="w-full rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900"
         />
         <input
           type="password"
@@ -112,7 +114,7 @@ export default function SignInPage() {
           onChange={(e) => setPassword(e.target.value)}
           placeholder={mode === "register" ? "Password (min 8 characters)" : "Password"}
           autoComplete={mode === "register" ? "new-password" : "current-password"}
-          className="w-full rounded-lg border p-3"
+          className="w-full rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900"
         />
 
         {error && <p className="text-sm text-red-600">{error}</p>}
@@ -132,9 +134,9 @@ export default function SignInPage() {
 
       {/* Divider */}
       <div className="flex items-center gap-3 py-5 text-sm text-gray-400">
-        <div className="h-px flex-1 bg-gray-200" />
+        <div className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
         or
-        <div className="h-px flex-1 bg-gray-200" />
+        <div className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
       </div>
 
       <div className="space-y-3">
@@ -149,7 +151,7 @@ export default function SignInPage() {
         {providers.google && (
           <a
             href={oauthLoginUrl("google")}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-3 font-medium hover:bg-gray-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-3 font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
           >
             Continue with Google
           </a>
@@ -157,14 +159,14 @@ export default function SignInPage() {
         <button
           onClick={demoLogin}
           disabled={busy}
-          className="w-full rounded-lg border px-4 py-3 font-medium hover:bg-gray-50 disabled:opacity-50"
+          className="w-full rounded-lg border border-gray-200 px-4 py-3 font-medium hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
         >
           Continue as demo user
         </button>
       </div>
 
       {!anyOAuth && (
-        <p className="mt-6 text-sm text-gray-500">
+        <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
           GitHub/Google sign-in isn&apos;t configured on this server — add the
           OAuth credentials in the backend <code>.env</code> to enable them.
           Email/password and the demo login work either way.

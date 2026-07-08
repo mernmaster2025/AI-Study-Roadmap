@@ -41,7 +41,7 @@ export default function CodeEditor({ challenge, onSolved }: Props) {
           <h3 className="font-semibold">Your Code</h3>
           <button
             onClick={() => setCode(challenge.starter_code)}
-            className="text-xs text-gray-500 hover:text-gray-800"
+            className="text-xs text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
           >
             Reset
           </button>
@@ -81,7 +81,7 @@ export default function CodeEditor({ challenge, onSolved }: Props) {
           {challenge.hints.length > 0 && hintsShown < challenge.hints.length && (
             <button
               onClick={() => setHintsShown((n) => n + 1)}
-              className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50"
+              className="rounded-md border border-gray-200 px-4 py-2 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
             >
               Show hint ({hintsShown}/{challenge.hints.length})
             </button>
@@ -89,7 +89,7 @@ export default function CodeEditor({ challenge, onSolved }: Props) {
         </div>
 
         {hintsShown > 0 && (
-          <ul className="mt-3 space-y-1 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
+          <ul className="mt-3 space-y-1 rounded-md bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-900/30 dark:text-amber-200">
             {challenge.hints.slice(0, hintsShown).map((h, i) => (
               <li key={i}>💡 {h}</li>
             ))}
@@ -100,7 +100,7 @@ export default function CodeEditor({ challenge, onSolved }: Props) {
       {/* ---- Output / results ---- */}
       <div>
         <h3 className="mb-2 font-semibold">Output</h3>
-        <pre className="h-24 overflow-auto rounded-lg bg-gray-100 p-3 text-sm">
+        <pre className="h-24 overflow-auto rounded-lg bg-gray-100 p-3 text-sm dark:bg-gray-800">
           {error
             ? `Error: ${error}`
             : result?.error
@@ -115,8 +115,8 @@ export default function CodeEditor({ challenge, onSolved }: Props) {
               <span
                 className={
                   result.all_tests_passed
-                    ? "text-sm font-medium text-green-600"
-                    : "text-sm font-medium text-gray-500"
+                    ? "text-sm font-medium text-green-600 dark:text-green-400"
+                    : "text-sm font-medium text-gray-500 dark:text-gray-400"
                 }
               >
                 {result.test_results.filter((t) => t.passed).length}/
@@ -126,7 +126,7 @@ export default function CodeEditor({ challenge, onSolved }: Props) {
           </div>
 
           {result?.all_tests_passed && (
-            <div className="mb-3 rounded-md bg-green-100 p-3 text-sm font-medium text-green-800">
+            <div className="mb-3 rounded-md bg-green-100 p-3 text-sm font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300">
               🎉 All tests passed — challenge solved!
             </div>
           )}
@@ -136,17 +136,19 @@ export default function CodeEditor({ challenge, onSolved }: Props) {
               <div
                 key={t.test_number}
                 className={`rounded-md p-3 text-sm ${
-                  t.passed ? "bg-green-50" : "bg-red-50"
+                  t.passed
+                    ? "bg-green-50 dark:bg-green-900/25"
+                    : "bg-red-50 dark:bg-red-900/25"
                 }`}
               >
                 <p className="font-medium">
                   Test {t.test_number}: {t.passed ? "✓ Passed" : "✗ Failed"}
                 </p>
                 {t.error ? (
-                  <p className="mt-1 text-red-700">Error: {t.error}</p>
+                  <p className="mt-1 text-red-700 dark:text-red-400">Error: {t.error}</p>
                 ) : (
                   !t.passed && (
-                    <p className="mt-1 text-gray-600">
+                    <p className="mt-1 text-gray-600 dark:text-gray-400">
                       Expected <code>{t.expected}</code>, got{" "}
                       <code>{t.actual}</code>
                     </p>

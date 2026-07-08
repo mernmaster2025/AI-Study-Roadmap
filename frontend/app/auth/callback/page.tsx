@@ -26,14 +26,14 @@ export default function OAuthCallbackPage() {
     <div className="mx-auto max-w-md py-20 text-center">
       {error ? (
         <>
-          <h1 className="text-xl font-bold text-red-600">Sign-in failed</h1>
-          <p className="mt-2 text-gray-600">{error}</p>
-          <a href="/auth/signin" className="mt-4 inline-block text-brand-600 hover:underline">
+          <h1 className="text-xl font-bold text-red-600 dark:text-red-400">Sign-in failed</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">{error}</p>
+          <a href="/auth/signin" className="mt-4 inline-block text-brand-600 hover:underline dark:text-brand-500">
             Try again
           </a>
         </>
       ) : (
-        <p className="text-gray-500">Signing you in…</p>
+        <p className="text-gray-500 dark:text-gray-400">Signing you in…</p>
       )}
     </div>
   );

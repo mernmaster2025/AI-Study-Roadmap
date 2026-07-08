@@ -13,7 +13,7 @@ export default function Home() {
         <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
           Learn AI, one runnable lesson at a time
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
+        <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
           A 12-phase roadmap from Python fundamentals to production AI. Read,
           code, run, and get graded instantly.
         </p>
@@ -29,10 +29,13 @@ export default function Home() {
 
       <section className="grid gap-6 sm:grid-cols-3">
         {FEATURES.map((f) => (
-          <div key={f.title} className="rounded-xl border bg-white p-6">
+          <div
+            key={f.title}
+            className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900"
+          >
             <div className="text-3xl">{f.icon}</div>
             <h3 className="mt-3 font-semibold">{f.title}</h3>
-            <p className="mt-1 text-sm text-gray-600">{f.body}</p>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{f.body}</p>
           </div>
         ))}
       </section>

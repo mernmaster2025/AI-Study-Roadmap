@@ -21,13 +21,13 @@ export default function QuizPage({
       .finally(() => setLoading(false));
   }, [lessonId]);
 
-  if (loading) return <p className="text-gray-500">Loading…</p>;
+  if (loading) return <p className="text-gray-500 dark:text-gray-400">Loading…</p>;
 
   return (
     <div>
       <Link
         href={`/dashboard/${phaseId}/${lessonId}`}
-        className="text-sm text-brand-600 hover:underline"
+        className="text-sm text-brand-600 hover:underline dark:text-brand-500"
       >
         ← Back to lesson
       </Link>

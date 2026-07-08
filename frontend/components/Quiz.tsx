@@ -40,22 +40,23 @@ export default function Quiz({ quiz }: { quiz: QuizData }) {
   };
 
   if (questions.length === 0) {
-    return <p className="text-gray-500">This lesson has no quiz yet.</p>;
+    return <p className="text-gray-500 dark:text-gray-400">This lesson has no quiz yet.</p>;
   }
 
   // ---- Results view ----
   if (result) {
     return (
       <div>
-        <div className="mb-6 rounded-xl border bg-white p-6 text-center">
+        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6 text-center dark:border-gray-800 dark:bg-gray-900">
           <p className="text-5xl font-extrabold">{result.score}%</p>
-          <p className="mt-1 text-gray-600">
-            {result.correct_count}/{result.total} correct · attempt{" "}
-            {result.attempts}
+          <p className="mt-1 text-gray-600 dark:text-gray-400">
+            {result.correct_count}/{result.total} correct · attempt {result.attempts}
           </p>
           <p
             className={`mt-3 font-medium ${
-              result.passed ? "text-green-600" : "text-orange-600"
+              result.passed
+                ? "text-green-600 dark:text-green-400"
+                : "text-orange-600 dark:text-orange-400"
             }`}
           >
             {result.passed
@@ -66,20 +67,22 @@ export default function Quiz({ quiz }: { quiz: QuizData }) {
 
         <div className="space-y-4">
           {result.detailed_results.map((r, i) => (
-            <div key={r.id} className="rounded-lg border bg-white p-4">
+            <div
+              key={r.id}
+              className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
+            >
               <p className="font-medium">
                 {i + 1}. {r.text}
               </p>
-              <p className={r.correct ? "text-green-700" : "text-red-700"}>
-                Your answer: {r.user_answer ?? "(blank)"}{" "}
-                {r.correct ? "✓" : "✗"}
+              <p className={r.correct ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
+                Your answer: {r.user_answer ?? "(blank)"} {r.correct ? "✓" : "✗"}
               </p>
               {!r.correct && (
-                <p className="text-green-700">
+                <p className="text-green-700 dark:text-green-400">
                   Correct answer: {r.correct_answer}
                 </p>
               )}
-              <p className="mt-1 text-sm text-gray-600">{r.explanation}</p>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{r.explanation}</p>
             </div>
           ))}
         </div>
@@ -98,7 +101,7 @@ export default function Quiz({ quiz }: { quiz: QuizData }) {
   return (
     <div className="max-w-2xl">
       <div className="mb-4">
-        <p className="mb-1 text-sm text-gray-500">
+        <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
           Question {index + 1} of {questions.length} · {answered} answered
         </p>
         <ProgressBar value={((index + 1) / questions.length) * 100} />
@@ -111,8 +114,10 @@ export default function Quiz({ quiz }: { quiz: QuizData }) {
           {current.options.map((opt) => (
             <label
               key={opt}
-              className={`flex cursor-pointer items-center rounded-lg border p-3 hover:bg-gray-50 ${
-                answers[current.id] === opt ? "border-brand-600 bg-brand-50" : ""
+              className={`flex cursor-pointer items-center rounded-lg border p-3 transition ${
+                answers[current.id] === opt
+                  ? "border-brand-600 bg-brand-50 dark:border-brand-500 dark:bg-brand-500/10"
+                  : "border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
               }`}
             >
               <input
@@ -133,17 +138,17 @@ export default function Quiz({ quiz }: { quiz: QuizData }) {
           value={answers[current.id] ?? ""}
           onChange={(e) => setAnswer(e.target.value)}
           placeholder="Type your answer…"
-          className="w-full rounded-lg border p-3"
+          className="w-full rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900"
         />
       )}
 
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       <div className="mt-6 flex items-center justify-between">
         <button
           onClick={() => setIndex((i) => Math.max(0, i - 1))}
           disabled={index === 0}
-          className="rounded-md bg-gray-200 px-4 py-2 disabled:opacity-50"
+          className="rounded-md bg-gray-200 px-4 py-2 disabled:opacity-50 dark:bg-gray-800"
         >
           Previous
         </button>
@@ -153,11 +158,7 @@ export default function Quiz({ quiz }: { quiz: QuizData }) {
             onClick={submit}
             disabled={submitting || answered < questions.length}
             className="rounded-md bg-green-600 px-6 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
-            title={
-              answered < questions.length
-                ? "Answer every question first"
-                : undefined
-            }
+            title={answered < questions.length ? "Answer every question first" : undefined}
           >
             {submitting ? "Submitting…" : "Submit quiz"}
           </button>

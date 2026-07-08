@@ -37,14 +37,14 @@ export default function DashboardPage() {
     (progress?.phases ?? []).map((p) => [p.phase_id, p])
   );
 
-  if (loading) return <p className="text-gray-500">Loading…</p>;
+  if (loading) return <p className="text-gray-500 dark:text-gray-400">Loading…</p>;
 
   return (
     <div>
       <div className="mb-8 flex items-end justify-between">
         <div>
           <h1 className="text-3xl font-bold">Your Roadmap</h1>
-          <p className="text-gray-600">Pick a phase to start learning.</p>
+          <p className="text-gray-600 dark:text-gray-400">Pick a phase to start learning.</p>
         </div>
         {!user && (
           <button
@@ -72,22 +72,22 @@ export default function DashboardPage() {
             <Link
               key={phase.id}
               href={`/dashboard/${phase.id}`}
-              className="block rounded-xl border bg-white p-6 transition hover:shadow-md"
+              className="block rounded-xl border border-gray-200 bg-white p-6 transition hover:shadow-md hover:shadow-black/5 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">
                   Phase {phase.phase_number}: {phase.title}
                 </h2>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   ~{phase.estimated_hours}h
                 </span>
               </div>
-              <p className="mt-1 text-sm text-gray-600">
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 {teaser(phase.description, 180)}
               </p>
               {pp && (
                 <div className="mt-4">
-                  <div className="mb-1 flex justify-between text-xs text-gray-500">
+                  <div className="mb-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
                     <span>
                       {pp.challenges_solved}/{pp.total_challenges} challenges
                       {pp.total_quizzes > 0 &&
@@ -116,10 +116,10 @@ function StatCard({
   icon: string;
 }) {
   return (
-    <div className="rounded-xl border bg-white p-5">
+    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
       <div className="text-2xl">{icon}</div>
       <div className="mt-2 text-2xl font-bold">{value}</div>
-      <div className="text-sm text-gray-500">{label}</div>
+      <div className="text-sm text-gray-500 dark:text-gray-400">{label}</div>
     </div>
   );
 }
