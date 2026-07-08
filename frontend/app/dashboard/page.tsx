@@ -10,6 +10,7 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import ProgressBar from "@/components/ProgressBar";
+import { teaser } from "@/lib/text";
 
 export default function DashboardPage() {
   const { user, login, loading: authLoading } = useAuth();
@@ -81,7 +82,9 @@ export default function DashboardPage() {
                   ~{phase.estimated_hours}h
                 </span>
               </div>
-              <p className="mt-1 text-sm text-gray-600">{phase.description}</p>
+              <p className="mt-1 text-sm text-gray-600">
+                {teaser(phase.description, 180)}
+              </p>
               {pp && (
                 <div className="mt-4">
                   <div className="mb-1 flex justify-between text-xs text-gray-500">

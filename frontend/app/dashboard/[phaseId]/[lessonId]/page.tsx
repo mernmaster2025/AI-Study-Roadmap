@@ -35,7 +35,15 @@ export default function LessonPage({
         ← Back to phase
       </Link>
 
-      <article className="prose mt-4 max-w-none">
+      <h1 className="mt-3 text-3xl font-bold">{lesson.title}</h1>
+
+      {/* Beginner-friendly intro (the gentle on-ramp) */}
+      <article className="prose prose-sm mt-4 max-w-none rounded-xl border border-brand-100 bg-brand-50 p-6">
+        <ReactMarkdown>{lesson.description}</ReactMarkdown>
+      </article>
+
+      {/* The technical deep-dive */}
+      <article className="prose mt-6 max-w-none">
         <div className="rounded-xl border bg-white p-6">
           <ReactMarkdown>{lesson.content_markdown}</ReactMarkdown>
         </div>

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import { api, type PhaseDetail } from "@/lib/api";
+import { teaser } from "@/lib/text";
 
 export default function PhasePage({
   params,
@@ -31,9 +33,13 @@ export default function PhasePage({
       <h1 className="mt-2 text-3xl font-bold">
         Phase {phase.phase_number}: {phase.title}
       </h1>
-      <p className="mt-1 text-gray-600">{phase.description}</p>
 
-      <div className="mt-8 space-y-3">
+      <article className="prose prose-sm mt-4 max-w-none rounded-xl border bg-white p-6">
+        <ReactMarkdown>{phase.description}</ReactMarkdown>
+      </article>
+
+      <h2 className="mt-8 mb-3 text-xl font-bold">Lessons</h2>
+      <div className="space-y-3">
         {phase.lessons.map((lesson) => (
           <Link
             key={lesson.id}
@@ -45,7 +51,9 @@ export default function PhasePage({
                 Lesson {lesson.lesson_number}
               </div>
               <div className="font-semibold">{lesson.title}</div>
-              <div className="text-sm text-gray-600">{lesson.description}</div>
+              <div className="text-sm text-gray-600">
+                {teaser(lesson.description)}
+              </div>
             </div>
             <span className="text-sm text-gray-400">
               ~{lesson.estimated_minutes} min
