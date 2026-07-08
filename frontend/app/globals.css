@@ -12,3 +12,19 @@ html.dark {
 body {
   @apply bg-gray-50 text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
 }
+
+/* Markdown (prose) tweaks to match the admin preview:
+   Tailwind Typography wraps inline <code> in literal backtick characters via
+   ::before/::after — remove them and render inline code as a subtle chip. */
+.prose :where(code)::before,
+.prose :where(code)::after {
+  content: none;
+}
+.prose :where(code):not(:where(pre *)) {
+  background: rgba(127, 127, 127, 0.18);
+  padding: 0.1em 0.35em;
+  border-radius: 6px;
+  font-size: 0.85em;
+  font-weight: 400;
+}
+
