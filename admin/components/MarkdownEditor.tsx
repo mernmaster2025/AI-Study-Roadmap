@@ -3,6 +3,24 @@
 import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import {
+  Box,
+  Divider,
+  IconButton,
+  Paper,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+} from "@mui/material";
+import FormatBoldIcon from "@mui/icons-material/FormatBold";
+import FormatItalicIcon from "@mui/icons-material/FormatItalic";
+import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
+import CodeIcon from "@mui/icons-material/Code";
+import DataObjectIcon from "@mui/icons-material/DataObject";
+import LinkIcon from "@mui/icons-material/Link";
 
 interface Props {
   value: string;
@@ -11,29 +29,21 @@ interface Props {
   placeholder?: string;
 }
 
-type Tab = "write" | "preview";
-
-/**
- * A lightweight GitHub-style Markdown editor: a formatting toolbar over a
- * textarea, plus a Write/Preview tab toggle that renders GFM Markdown.
- */
 export default function MarkdownEditor({
   value,
   onChange,
-  minHeight = 240,
+  minHeight = 220,
   placeholder = "Write Markdown…",
 }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
-  const [tab, setTab] = useState<Tab>("write");
+  const [tab, setTab] = useState<"write" | "preview">("write");
 
-  // Wrap the current selection with `before`/`after` (e.g. **bold**).
   const surround = (before: string, after = before, ph = "text") => {
     const ta = ref.current;
     if (!ta) return;
     const { selectionStart: s, selectionEnd: e } = ta;
     const selected = value.slice(s, e) || ph;
-    const next = value.slice(0, s) + before + selected + after + value.slice(e);
-    onChange(next);
+    onChange(value.slice(0, s) + before + selected + after + value.slice(e));
     requestAnimationFrame(() => {
       ta.focus();
       ta.selectionStart = s + before.length;
@@ -41,7 +51,6 @@ export default function MarkdownEditor({
     });
   };
 
-  // Prefix each selected line (headings, quotes, list items).
   const prefixLines = (prefix: string, numbered = false) => {
     const ta = ref.current;
     if (!ta) return;
@@ -52,8 +61,7 @@ export default function MarkdownEditor({
       .split("\n")
       .map((l, i) => (numbered ? `${i + 1}. ` : prefix) + l)
       .join("\n");
-    const next = value.slice(0, lineStart) + prefixed + value.slice(e);
-    onChange(next);
+    onChange(value.slice(0, lineStart) + prefixed + value.slice(e));
     requestAnimationFrame(() => ta.focus());
   };
 
@@ -61,89 +69,99 @@ export default function MarkdownEditor({
     const ta = ref.current;
     if (!ta) return;
     const { selectionStart: s } = ta;
-    const next = value.slice(0, s) + text + value.slice(s);
-    onChange(next);
+    onChange(value.slice(0, s) + text + value.slice(s));
     requestAnimationFrame(() => {
       ta.focus();
       ta.selectionStart = ta.selectionEnd = s + text.length;
     });
   };
 
-  const TOOLS: { label: string; title: string; run: () => void }[] = [
-    { label: "H1", title: "Heading 1", run: () => prefixLines("# ") },
-    { label: "H2", title: "Heading 2", run: () => prefixLines("## ") },
-    { label: "B", title: "Bold", run: () => surround("**") },
-    { label: "I", title: "Italic", run: () => surround("_") },
-    { label: "“ ”", title: "Quote", run: () => prefixLines("> ") },
-    { label: "•", title: "Bullet list", run: () => prefixLines("- ") },
-    { label: "1.", title: "Numbered list", run: () => prefixLines("", true) },
-    { label: "<>", title: "Inline code", run: () => surround("`") },
-    { label: "{ }", title: "Code block", run: () => insertBlock("\n```python\n\n```\n") },
-    { label: "🔗", title: "Link", run: () => surround("[", "](https://)", "text") },
+  const tools = [
+    { title: "Heading 1", label: "H1", run: () => prefixLines("# ") },
+    { title: "Heading 2", label: "H2", run: () => prefixLines("## ") },
+    { title: "Bold", icon: <FormatBoldIcon fontSize="small" />, run: () => surround("**") },
+    { title: "Italic", icon: <FormatItalicIcon fontSize="small" />, run: () => surround("_") },
+    { title: "Quote", icon: <FormatQuoteIcon fontSize="small" />, run: () => prefixLines("> ") },
+    { title: "Bullet list", icon: <FormatListBulletedIcon fontSize="small" />, run: () => prefixLines("- ") },
+    { title: "Numbered list", icon: <FormatListNumberedIcon fontSize="small" />, run: () => prefixLines("", true) },
+    { title: "Inline code", icon: <CodeIcon fontSize="small" />, run: () => surround("`") },
+    { title: "Code block", icon: <DataObjectIcon fontSize="small" />, run: () => insertBlock("\n```python\n\n```\n") },
+    { title: "Link", icon: <LinkIcon fontSize="small" />, run: () => surround("[", "](https://)", "text") },
   ];
 
   return (
-    <div className="overflow-hidden rounded-md border">
-      {/* Tabs + toolbar */}
-      <div className="flex items-center gap-1 border-b bg-gray-50 px-2 py-1">
-        <button
-          type="button"
-          onClick={() => setTab("write")}
-          className={`rounded px-3 py-1 text-sm ${
-            tab === "write" ? "bg-white font-medium shadow-sm" : "text-gray-500"
-          }`}
+    <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
+          flexWrap: "wrap",
+          px: 1,
+          py: 0.5,
+          bgcolor: "action.hover",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <ToggleButtonGroup
+          size="small"
+          exclusive
+          value={tab}
+          onChange={(_, v) => v && setTab(v)}
+          sx={{ "& .MuiToggleButton-root": { px: 1.5, py: 0.3, textTransform: "none" } }}
         >
-          Write
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("preview")}
-          className={`rounded px-3 py-1 text-sm ${
-            tab === "preview" ? "bg-white font-medium shadow-sm" : "text-gray-500"
-          }`}
-        >
-          Preview
-        </button>
+          <ToggleButton value="write">Write</ToggleButton>
+          <ToggleButton value="preview">Preview</ToggleButton>
+        </ToggleButtonGroup>
 
         {tab === "write" && (
-          <div className="ml-2 flex flex-wrap items-center gap-0.5 border-l pl-2">
-            {TOOLS.map((t) => (
-              <button
-                key={t.label}
-                type="button"
-                title={t.title}
-                onClick={t.run}
-                className="rounded px-2 py-1 text-xs text-gray-600 hover:bg-gray-200"
-              >
-                {t.label}
-              </button>
+          <>
+            <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+            {tools.map((t) => (
+              <Tooltip key={t.title} title={t.title}>
+                <IconButton size="small" onClick={t.run} sx={{ borderRadius: 1.5 }}>
+                  {t.icon ?? (
+                    <Box component="span" sx={{ fontSize: 12, fontWeight: 700 }}>
+                      {t.label}
+                    </Box>
+                  )}
+                </IconButton>
+              </Tooltip>
             ))}
-          </div>
+          </>
         )}
-      </div>
+      </Box>
 
       {tab === "write" ? (
-        <textarea
-          ref={ref}
+        <TextField
+          inputRef={ref}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          spellCheck={false}
-          style={{ minHeight }}
-          className="w-full resize-y bg-white p-3 font-mono text-xs outline-none"
+          multiline
+          fullWidth
+          variant="standard"
+          InputProps={{
+            disableUnderline: true,
+            sx: {
+              p: 1.5,
+              alignItems: "flex-start",
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+              fontSize: 13,
+              "& textarea": { minHeight },
+            },
+          }}
         />
       ) : (
-        <div
-          style={{ minHeight }}
-          className="prose prose-sm max-w-none overflow-auto bg-white p-4"
-        >
+        <Box className="md-preview" sx={{ p: 2, minHeight, overflow: "auto" }}>
           {value.trim() ? (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
           ) : (
-            <p className="text-gray-400">Nothing to preview.</p>
+            <Box sx={{ color: "text.disabled" }}>Nothing to preview.</Box>
           )}
-        </div>
+        </Box>
       )}
-    </div>
+    </Paper>
   );
 }

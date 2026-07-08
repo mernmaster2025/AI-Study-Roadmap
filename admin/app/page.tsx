@@ -1,6 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  Grow,
+  Typography,
+} from "@mui/material";
+import PeopleIcon from "@mui/icons-material/PeopleAltRounded";
+import ShieldIcon from "@mui/icons-material/ShieldRounded";
+import LayersIcon from "@mui/icons-material/LayersRounded";
+import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
+import CodeIcon from "@mui/icons-material/CodeRounded";
+import QuizIcon from "@mui/icons-material/QuizRounded";
+import AssignmentIcon from "@mui/icons-material/AssignmentRounded";
+import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
+import PsychologyIcon from "@mui/icons-material/PsychologyRounded";
 import Shell from "@/components/Shell";
 import { api, type Stats } from "@/lib/api";
 
@@ -20,33 +36,68 @@ function Dashboard() {
     api.stats().then(setStats).catch((e) => setError(e.message));
   }, []);
 
-  if (error) return <p className="text-red-600">{error}</p>;
-  if (!stats) return <p className="text-gray-500">Loading…</p>;
+  if (error) return <Typography color="error">{error}</Typography>;
+  if (!stats) return <Typography color="text.secondary">Loading…</Typography>;
 
-  const cards: { label: string; value: number; icon: string }[] = [
-    { label: "Users", value: stats.users, icon: "👥" },
-    { label: "Admins", value: stats.admins, icon: "🛡️" },
-    { label: "Phases", value: stats.phases, icon: "🗺️" },
-    { label: "Lessons", value: stats.lessons, icon: "📖" },
-    { label: "Challenges", value: stats.challenges, icon: "🧩" },
-    { label: "Quiz questions", value: stats.quiz_questions, icon: "❓" },
-    { label: "Submissions", value: stats.submissions, icon: "📝" },
-    { label: "Passed submissions", value: stats.passed_submissions, icon: "✅" },
-    { label: "Quiz attempts", value: stats.quiz_attempts, icon: "🧠" },
+  const cards = [
+    { label: "Users", value: stats.users, icon: <PeopleIcon />, color: "#7c8cff" },
+    { label: "Admins", value: stats.admins, icon: <ShieldIcon />, color: "#f59e0b" },
+    { label: "Phases", value: stats.phases, icon: <LayersIcon />, color: "#22d3ee" },
+    { label: "Lessons", value: stats.lessons, icon: <MenuBookIcon />, color: "#34d399" },
+    { label: "Challenges", value: stats.challenges, icon: <CodeIcon />, color: "#f472b6" },
+    { label: "Quiz questions", value: stats.quiz_questions, icon: <QuizIcon />, color: "#a78bfa" },
+    { label: "Submissions", value: stats.submissions, icon: <AssignmentIcon />, color: "#60a5fa" },
+    { label: "Passed", value: stats.passed_submissions, icon: <CheckCircleIcon />, color: "#4ade80" },
+    { label: "Quiz attempts", value: stats.quiz_attempts, icon: <PsychologyIcon />, color: "#fb7185" },
   ];
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold">Dashboard</h1>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {cards.map((c) => (
-          <div key={c.label} className="rounded-xl border bg-white p-5">
-            <div className="text-2xl">{c.icon}</div>
-            <div className="mt-2 text-3xl font-bold">{c.value}</div>
-            <div className="text-sm text-gray-500">{c.label}</div>
-          </div>
+    <Box>
+      <Typography variant="h4" sx={{ mb: 3 }}>
+        Dashboard
+      </Typography>
+      <Box
+        sx={{
+          display: "grid",
+          gap: 2,
+          gridTemplateColumns: {
+            xs: "repeat(2, 1fr)",
+            sm: "repeat(3, 1fr)",
+          },
+        }}
+      >
+        {cards.map((c, i) => (
+          <Grow in timeout={300 + i * 90} key={c.label}>
+            <Card
+              sx={{
+                "&:hover": { transform: "translateY(-3px)", boxShadow: 6 },
+              }}
+            >
+              <CardContent>
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 2,
+                    display: "grid",
+                    placeItems: "center",
+                    color: c.color,
+                    bgcolor: `${c.color}22`,
+                  }}
+                >
+                  {c.icon}
+                </Box>
+                <Typography variant="h4" sx={{ mt: 1.5 }}>
+                  {c.value.toLocaleString()}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {c.label}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grow>
         ))}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

@@ -1,20 +1,51 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import NextLink from "next/link";
+import {
+  AppBar,
+  Box,
+  CircularProgress,
+  Divider,
+  Drawer,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import DashboardIcon from "@mui/icons-material/SpaceDashboardRounded";
+import LayersIcon from "@mui/icons-material/LayersRounded";
+import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
+import CodeIcon from "@mui/icons-material/CodeRounded";
+import QuizIcon from "@mui/icons-material/QuizRounded";
+import PeopleIcon from "@mui/icons-material/PeopleAltRounded";
+import AssignmentIcon from "@mui/icons-material/AssignmentTurnedInRounded";
+import LightModeIcon from "@mui/icons-material/LightModeRounded";
+import DarkModeIcon from "@mui/icons-material/DarkModeRounded";
+import LogoutIcon from "@mui/icons-material/LogoutRounded";
 import { useAuth } from "@/lib/auth";
+import { useThemeMode } from "@/lib/theme";
+
+const DRAWER_WIDTH = 232;
 
 const NAV = [
-  { href: "/", label: "Dashboard", icon: "📊" },
-  { href: "/users", label: "Users", icon: "👥" },
-  { href: "/content", label: "Content", icon: "📚" },
-  { href: "/submissions", label: "Submissions", icon: "✅" },
+  { href: "/", label: "Dashboard", icon: <DashboardIcon /> },
+  { href: "/phases", label: "Phases", icon: <LayersIcon /> },
+  { href: "/lessons", label: "Lessons", icon: <MenuBookIcon /> },
+  { href: "/challenges", label: "Challenges", icon: <CodeIcon /> },
+  { href: "/quizzes", label: "Quizzes", icon: <QuizIcon /> },
+  { href: "/users", label: "Users", icon: <PeopleIcon /> },
+  { href: "/submissions", label: "Submissions", icon: <AssignmentIcon /> },
 ];
 
-/** Wraps protected admin pages: guards auth, renders sidebar + header. */
 export default function Shell({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
+  const { mode, toggle } = useThemeMode();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -23,53 +54,107 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   }, [loading, user, router]);
 
   if (loading)
-    return <div className="p-10 text-gray-500">Loading…</div>;
-  if (!user) return null; // redirecting
+    return (
+      <Box sx={{ display: "grid", placeItems: "center", height: "100vh" }}>
+        <CircularProgress />
+      </Box>
+    );
+  if (!user) return null;
+
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-56 shrink-0 border-r bg-white">
-        <div className="border-b px-5 py-4">
-          <div className="font-bold text-brand-700">AI Study</div>
-          <div className="text-xs text-gray-500">Admin panel</div>
-        </div>
-        <nav className="p-3">
+    <Box sx={{ display: "flex" }}>
+      <AppBar
+        position="fixed"
+        color="default"
+        elevation={0}
+        sx={{
+          zIndex: (t) => t.zIndex.drawer + 1,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          backdropFilter: "blur(8px)",
+          backgroundColor: (t) =>
+            t.palette.mode === "dark"
+              ? "rgba(19,26,43,0.7)"
+              : "rgba(255,255,255,0.7)",
+        }}
+      >
+        <Toolbar sx={{ gap: 1 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 800 }}>
+            <Box component="span" sx={{ color: "primary.main" }}>
+              AI Study
+            </Box>{" "}
+            Admin
+          </Typography>
+          <Tooltip title={mode === "dark" ? "Light mode" : "Dark mode"}>
+            <IconButton onClick={toggle} color="inherit">
+              {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+            </IconButton>
+          </Tooltip>
+          <Typography variant="body2" sx={{ color: "text.secondary", mx: 1 }}>
+            {user.email}
+          </Typography>
+          <Tooltip title="Sign out">
+            <IconButton onClick={logout} color="inherit">
+              <LogoutIcon />
+            </IconButton>
+          </Tooltip>
+        </Toolbar>
+      </AppBar>
+
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: DRAWER_WIDTH,
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
+            width: DRAWER_WIDTH,
+            boxSizing: "border-box",
+            borderRight: "1px solid",
+            borderColor: "divider",
+          },
+        }}
+      >
+        <Toolbar />
+        <List sx={{ px: 1.2, py: 1 }}>
           {NAV.map((n) => {
-            const active =
-              n.href === "/" ? pathname === "/" : pathname.startsWith(n.href);
+            const active = isActive(n.href);
             return (
-              <Link
+              <ListItemButton
                 key={n.href}
+                component={NextLink}
                 href={n.href}
-                className={`mb-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm ${
-                  active
-                    ? "bg-brand-50 font-medium text-brand-700"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
+                selected={active}
+                sx={{
+                  borderRadius: 2,
+                  mb: 0.5,
+                  transition: "background-color .2s, transform .15s",
+                  "&:hover": { transform: "translateX(2px)" },
+                  "&.Mui-selected": {
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    "& .MuiListItemIcon-root": { color: "primary.contrastText" },
+                    "&:hover": { bgcolor: "primary.main" },
+                  },
+                }}
               >
-                <span>{n.icon}</span>
-                {n.label}
-              </Link>
+                <ListItemIcon sx={{ minWidth: 40 }}>{n.icon}</ListItemIcon>
+                <ListItemText primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}>
+                  {n.label}
+                </ListItemText>
+              </ListItemButton>
             );
           })}
-        </nav>
-      </aside>
+        </List>
+        <Divider />
+      </Drawer>
 
-      <div className="flex-1">
-        <header className="flex items-center justify-between border-b bg-white px-6 py-3">
-          <div />
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-gray-600">{user.email}</span>
-            <button
-              onClick={logout}
-              className="rounded-md border px-3 py-1.5 hover:bg-gray-50"
-            >
-              Sign out
-            </button>
-          </div>
-        </header>
-        <main className="mx-auto max-w-6xl p-6">{children}</main>
-      </div>
-    </div>
+      <Box component="main" sx={{ flexGrow: 1, minWidth: 0, p: 3 }}>
+        <Toolbar />
+        <Box sx={{ maxWidth: 1100, mx: "auto" }}>{children}</Box>
+      </Box>
+    </Box>
   );
 }

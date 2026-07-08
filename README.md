@@ -141,11 +141,15 @@ frontend/
 ## Admin panel (`admin/`)
 
 A separate Next.js app (port **3001**) for managing the platform, backed by
-admin-only `/api/admin/*` endpoints (guarded by `require_admin`).
+admin-only `/api/admin/*` endpoints (guarded by `require_admin`). Built with
+**Material UI** — **dark theme by default** (toggle in the top bar), motion, and
+icon buttons.
 
-**Features:** dashboard stats · users (search, toggle admin, delete) · full
-content CRUD (phases → lessons → challenges → quiz questions, with answers
-visible for editing) · recent submissions.
+**Per-entity menus** (each its own page with search/filter + create/edit/delete):
+Dashboard (stats) · **Phases** · **Lessons** · **Challenges** · **Quizzes** ·
+**Users** (toggle admin, delete) · **Submissions**. Content editors include a
+**GitHub-style Markdown editor** (toolbar + Write/Preview) for descriptions and
+lesson content, and JSON fields for challenge test-cases/hints and quiz options.
 
 **Make yourself an admin, then run it:**
 

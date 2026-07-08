@@ -1,6 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  Box,
+  Chip,
+  IconButton,
+  Paper,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/DeleteOutlineRounded";
+import SearchIcon from "@mui/icons-material/SearchRounded";
 import Shell from "@/components/Shell";
 import { api, type AdminUser } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -17,125 +35,116 @@ function Users() {
   const { user: me } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [q, setQ] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const load = (query = "") => {
-    setLoading(true);
-    api
-      .users(query)
-      .then(setUsers)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => load(), []);
+  const load = (query = "") =>
+    api.users(query).then(setUsers).catch((e) => alert(e.message));
+  useEffect(() => {
+    load();
+  }, []);
 
   const toggleAdmin = async (u: AdminUser) => {
     try {
       const updated = await api.updateUser(u.id, { is_admin: !u.is_admin });
-      setUsers((prev) => prev.map((x) => (x.id === u.id ? updated : x)));
+      setUsers((p) => p.map((x) => (x.id === u.id ? updated : x)));
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed");
     }
   };
 
   const remove = async (u: AdminUser) => {
-    if (!confirm(`Delete ${u.email}? This also removes their submissions and progress.`))
-      return;
+    if (!confirm(`Delete ${u.email}? Removes their submissions and progress too.`)) return;
     try {
       await api.deleteUser(u.id);
-      setUsers((prev) => prev.filter((x) => x.id !== u.id));
+      setUsers((p) => p.filter((x) => x.id !== u.id));
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed");
     }
   };
 
   return (
-    <div>
-      <h1 className="mb-4 text-2xl font-bold">Users</h1>
-      <form
+    <Box>
+      <Typography variant="h4" sx={{ mb: 2 }}>
+        Users
+      </Typography>
+      <Box
+        component="form"
         onSubmit={(e) => {
           e.preventDefault();
           load(q);
         }}
-        className="mb-4 flex gap-2"
+        sx={{ mb: 2, display: "flex", gap: 1 }}
       >
-        <input
+        <TextField
+          size="small"
+          placeholder="Search email or name…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search email or name…"
-          className="w-72 rounded-md border p-2 text-sm"
+          InputProps={{ startAdornment: <SearchIcon sx={{ mr: 1, color: "text.disabled" }} /> }}
+          sx={{ width: 320 }}
         />
-        <button className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50">
-          Search
-        </button>
-      </form>
+      </Box>
 
-      {error && <p className="text-red-600">{error}</p>}
-      {loading ? (
-        <p className="text-gray-500">Loading…</p>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border bg-white">
-          <table className="w-full text-sm">
-            <thead className="border-b bg-gray-50 text-left text-gray-500">
-              <tr>
-                <th className="p-3">Email</th>
-                <th className="p-3">Name</th>
-                <th className="p-3">Login</th>
-                <th className="p-3">Admin</th>
-                <th className="p-3">Joined</th>
-                <th className="p-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-b last:border-0">
-                  <td className="p-3 font-medium">{u.email}</td>
-                  <td className="p-3">{u.name}</td>
-                  <td className="p-3 text-gray-500">
-                    {u.has_password ? "password" : "oauth/dev"}
-                  </td>
-                  <td className="p-3">
-                    <button
-                      onClick={() => toggleAdmin(u)}
-                      disabled={u.id === me?.id}
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                        u.is_admin
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      } ${u.id === me?.id ? "opacity-50" : "hover:opacity-80"}`}
-                      title={u.id === me?.id ? "You can't change your own role" : "Toggle admin"}
-                    >
-                      {u.is_admin ? "Admin" : "Learner"}
-                    </button>
-                  </td>
-                  <td className="p-3 text-gray-500">
-                    {new Date(u.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="p-3 text-right">
-                    {u.id !== me?.id && (
-                      <button
+      <TableContainer component={Paper} variant="outlined">
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Email</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Login</TableCell>
+              <TableCell>Admin</TableCell>
+              <TableCell>Joined</TableCell>
+              <TableCell align="right" />
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {users.map((u) => (
+              <TableRow key={u.id} hover>
+                <TableCell sx={{ fontWeight: 600 }}>{u.email}</TableCell>
+                <TableCell>{u.name}</TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    label={u.has_password ? "password" : "oauth/dev"}
+                    variant="outlined"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Switch
+                    checked={u.is_admin}
+                    onChange={() => toggleAdmin(u)}
+                    disabled={u.id === me?.id}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell sx={{ color: "text.secondary" }}>
+                  {new Date(u.created_at).toLocaleDateString()}
+                </TableCell>
+                <TableCell align="right">
+                  <Tooltip title={u.id === me?.id ? "You can't delete yourself" : "Delete"}>
+                    <span>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        disabled={u.id === me?.id}
                         onClick={() => remove(u)}
-                        className="text-red-600 hover:underline"
                       >
-                        Delete
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-6 text-center text-gray-500">
-                    No users found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            ))}
+            {users.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 5, color: "text.secondary" }}>
+                  No users found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 }

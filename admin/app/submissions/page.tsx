@@ -1,6 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  Box,
+  Chip,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 import Shell from "@/components/Shell";
 import { api, type Submission } from "@/lib/api";
 
@@ -14,70 +26,60 @@ export default function SubmissionsPage() {
 
 function Submissions() {
   const [rows, setRows] = useState<Submission[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api
-      .submissions(200)
-      .then(setRows)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    api.submissions(200).then(setRows).catch((e) => setError(e.message));
   }, []);
 
   return (
-    <div>
-      <h1 className="mb-4 text-2xl font-bold">Recent submissions</h1>
-      {error && <p className="text-red-600">{error}</p>}
-      {loading ? (
-        <p className="text-gray-500">Loading…</p>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border bg-white">
-          <table className="w-full text-sm">
-            <thead className="border-b bg-gray-50 text-left text-gray-500">
-              <tr>
-                <th className="p-3">User</th>
-                <th className="p-3">Challenge</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Score</th>
-                <th className="p-3">Attempts</th>
-                <th className="p-3">When</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((s) => (
-                <tr key={s.id} className="border-b last:border-0">
-                  <td className="p-3">{s.user_email}</td>
-                  <td className="p-3">{s.challenge_title}</td>
-                  <td className="p-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        s.status === "passed"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {s.status}
-                    </span>
-                  </td>
-                  <td className="p-3">{s.score}</td>
-                  <td className="p-3">{s.attempts}</td>
-                  <td className="p-3 text-gray-500">
-                    {new Date(s.submitted_at).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-              {rows.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-6 text-center text-gray-500">
-                    No submissions yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+    <Box>
+      <Typography variant="h4" sx={{ mb: 2 }}>
+        Recent submissions
+      </Typography>
+      {error && <Typography color="error">{error}</Typography>}
+      <TableContainer component={Paper} variant="outlined">
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>User</TableCell>
+              <TableCell>Challenge</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Score</TableCell>
+              <TableCell>Attempts</TableCell>
+              <TableCell>When</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows.map((s) => (
+              <TableRow key={s.id} hover>
+                <TableCell>{s.user_email}</TableCell>
+                <TableCell>{s.challenge_title}</TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    label={s.status}
+                    color={s.status === "passed" ? "success" : "error"}
+                    variant={s.status === "passed" ? "filled" : "outlined"}
+                  />
+                </TableCell>
+                <TableCell>{s.score}</TableCell>
+                <TableCell>{s.attempts}</TableCell>
+                <TableCell sx={{ color: "text.secondary" }}>
+                  {new Date(s.submitted_at).toLocaleString()}
+                </TableCell>
+              </TableRow>
+            ))}
+            {rows.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 5, color: "text.secondary" }}>
+                  No submissions yet.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 }

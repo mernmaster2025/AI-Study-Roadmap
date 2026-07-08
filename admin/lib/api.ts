@@ -69,6 +69,18 @@ export interface Submission {
   challenge_title: string; status: string; score: number; attempts: number;
   submitted_at: string;
 }
+export interface LessonListItem {
+  id: string; phase_id: string; phase_number: number; phase_title: string;
+  lesson_number: number; title: string; order: number;
+}
+export interface ChallengeListItem {
+  id: string; lesson_id: string; lesson_title: string; title: string;
+  difficulty: string; order: number;
+}
+export interface QuizListItem {
+  id: string; lesson_id: string; lesson_title: string; type: string;
+  text: string; order: number;
+}
 
 // ---- Endpoints ----
 export const api = {
@@ -100,6 +112,8 @@ export const api = {
 
   lessons: (phaseId: string) =>
     request<Lesson[]>(`/api/admin/phases/${phaseId}/lessons`),
+  allLessons: (phaseId?: string) =>
+    request<LessonListItem[]>(`/api/admin/lessons${phaseId ? `?phase_id=${phaseId}` : ""}`),
   lesson: (id: string) => request<Lesson>(`/api/admin/lessons/${id}`),
   createLesson: (body: Record<string, unknown>) =>
     request<Lesson>("/api/admin/lessons", { method: "POST", body: JSON.stringify(body) }),
@@ -110,6 +124,9 @@ export const api = {
 
   challenges: (lessonId: string) =>
     request<Challenge[]>(`/api/admin/lessons/${lessonId}/challenges`),
+  allChallenges: (lessonId?: string) =>
+    request<ChallengeListItem[]>(`/api/admin/challenges${lessonId ? `?lesson_id=${lessonId}` : ""}`),
+  challenge: (id: string) => request<Challenge>(`/api/admin/challenges/${id}`),
   createChallenge: (body: Record<string, unknown>) =>
     request<Challenge>("/api/admin/challenges", { method: "POST", body: JSON.stringify(body) }),
   updateChallenge: (id: string, body: Record<string, unknown>) =>
@@ -119,6 +136,9 @@ export const api = {
 
   quiz: (lessonId: string) =>
     request<QuizQuestion[]>(`/api/admin/lessons/${lessonId}/quiz`),
+  allQuiz: (lessonId?: string) =>
+    request<QuizListItem[]>(`/api/admin/quiz${lessonId ? `?lesson_id=${lessonId}` : ""}`),
+  quizQuestion: (id: string) => request<QuizQuestion>(`/api/admin/quiz/${id}`),
   createQuiz: (body: Record<string, unknown>) =>
     request<QuizQuestion>("/api/admin/quiz", { method: "POST", body: JSON.stringify(body) }),
   updateQuiz: (id: string, body: Record<string, unknown>) =>

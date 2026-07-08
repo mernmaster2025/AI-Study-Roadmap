@@ -328,6 +328,34 @@ class AdminQuizQuestionOut(ORMModel):
     explanation: str
 
 
+class AdminLessonListItem(BaseModel):
+    id: str
+    phase_id: str
+    phase_number: int
+    phase_title: str
+    lesson_number: int
+    title: str
+    order: int
+
+
+class AdminChallengeListItem(BaseModel):
+    id: str
+    lesson_id: str
+    lesson_title: str
+    title: str
+    difficulty: str
+    order: int
+
+
+class AdminQuizListItem(BaseModel):
+    id: str
+    lesson_id: str
+    lesson_title: str
+    type: str
+    text: str
+    order: int
+
+
 class AdminSubmissionOut(BaseModel):
     id: str
     user_id: str

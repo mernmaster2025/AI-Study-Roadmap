@@ -25,9 +25,12 @@ from app.models import (
     UserQuizAttempt,
 )
 from app.schemas import (
+    AdminChallengeListItem,
     AdminChallengeOut,
+    AdminLessonListItem,
     AdminLessonOut,
     AdminPhaseOut,
+    AdminQuizListItem,
     AdminQuizQuestionOut,
     AdminStats,
     AdminSubmissionOut,
@@ -217,6 +220,26 @@ def delete_phase(phase_id: str, db: Session = Depends(get_db)):
 
 
 # ---------- lessons ----------
+@router.get("/lessons", response_model=list[AdminLessonListItem])
+def list_all_lessons(
+    phase_id: str | None = Query(None), db: Session = Depends(get_db)
+):
+    stmt = (
+        select(Lesson, Phase.phase_number, Phase.title)
+        .join(Phase, Lesson.phase_id == Phase.id)
+        .order_by(Phase.order, Lesson.order)
+    )
+    if phase_id:
+        stmt = stmt.where(Lesson.phase_id == phase_id)
+    return [
+        AdminLessonListItem(
+            id=l.id, phase_id=l.phase_id, phase_number=pn, phase_title=pt,
+            lesson_number=l.lesson_number, title=l.title, order=l.order,
+        )
+        for l, pn, pt in db.execute(stmt).all()
+    ]
+
+
 @router.get("/phases/{phase_id}/lessons", response_model=list[AdminLessonOut])
 def list_lessons(phase_id: str, db: Session = Depends(get_db)):
     return db.scalars(
@@ -265,11 +288,39 @@ def delete_lesson(lesson_id: str, db: Session = Depends(get_db)):
 
 
 # ---------- challenges ----------
+@router.get("/challenges", response_model=list[AdminChallengeListItem])
+def list_all_challenges(
+    lesson_id: str | None = Query(None), db: Session = Depends(get_db)
+):
+    stmt = (
+        select(Challenge, Lesson.title)
+        .join(Lesson, Challenge.lesson_id == Lesson.id)
+        .order_by(Lesson.order, Challenge.order)
+    )
+    if lesson_id:
+        stmt = stmt.where(Challenge.lesson_id == lesson_id)
+    return [
+        AdminChallengeListItem(
+            id=c.id, lesson_id=c.lesson_id, lesson_title=lt,
+            title=c.title, difficulty=c.difficulty, order=c.order,
+        )
+        for c, lt in db.execute(stmt).all()
+    ]
+
+
 @router.get("/lessons/{lesson_id}/challenges", response_model=list[AdminChallengeOut])
 def list_challenges(lesson_id: str, db: Session = Depends(get_db)):
     return db.scalars(
         select(Challenge).where(Challenge.lesson_id == lesson_id).order_by(Challenge.order)
     ).all()
+
+
+@router.get("/challenges/{challenge_id}", response_model=AdminChallengeOut)
+def get_challenge(challenge_id: str, db: Session = Depends(get_db)):
+    ch = db.get(Challenge, challenge_id)
+    if ch is None:
+        raise HTTPException(status_code=404, detail="Challenge not found")
+    return ch
 
 
 @router.post("/challenges", response_model=AdminChallengeOut, status_code=201)
@@ -304,11 +355,39 @@ def delete_challenge(challenge_id: str, db: Session = Depends(get_db)):
 
 
 # ---------- quiz questions ----------
+@router.get("/quiz", response_model=list[AdminQuizListItem])
+def list_all_quiz(
+    lesson_id: str | None = Query(None), db: Session = Depends(get_db)
+):
+    stmt = (
+        select(QuizQuestion, Lesson.title)
+        .join(Lesson, QuizQuestion.lesson_id == Lesson.id)
+        .order_by(Lesson.order, QuizQuestion.order)
+    )
+    if lesson_id:
+        stmt = stmt.where(QuizQuestion.lesson_id == lesson_id)
+    return [
+        AdminQuizListItem(
+            id=q.id, lesson_id=q.lesson_id, lesson_title=lt,
+            type=q.type, text=q.text, order=q.order,
+        )
+        for q, lt in db.execute(stmt).all()
+    ]
+
+
 @router.get("/lessons/{lesson_id}/quiz", response_model=list[AdminQuizQuestionOut])
 def list_quiz(lesson_id: str, db: Session = Depends(get_db)):
     return db.scalars(
         select(QuizQuestion).where(QuizQuestion.lesson_id == lesson_id).order_by(QuizQuestion.order)
     ).all()
+
+
+@router.get("/quiz/{question_id}", response_model=AdminQuizQuestionOut)
+def get_quiz(question_id: str, db: Session = Depends(get_db)):
+    q = db.get(QuizQuestion, question_id)
+    if q is None:
+        raise HTTPException(status_code=404, detail="Question not found")
+    return q
 
 
 @router.post("/quiz", response_model=AdminQuizQuestionOut, status_code=201)

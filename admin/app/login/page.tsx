@@ -2,6 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useAuth } from "@/lib/auth";
 
 export default function LoginPage() {
@@ -31,43 +40,56 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <form
-        onSubmit={submit}
-        className="w-full max-w-sm rounded-xl border bg-white p-8 shadow-sm"
-      >
-        <div className="mb-1 text-lg font-bold text-brand-700">AI Study Admin</div>
-        <p className="mb-6 text-sm text-gray-500">
-          Sign in with an administrator account.
-        </p>
+    <Box sx={{ display: "grid", placeItems: "center", minHeight: "100vh", p: 2 }}>
+      <Card sx={{ width: "100%", maxWidth: 400 }}>
+        <CardContent component="form" onSubmit={submit} sx={{ p: 4 }}>
+          <Typography variant="h6" sx={{ fontWeight: 800 }}>
+            <Box component="span" sx={{ color: "primary.main" }}>
+              AI Study
+            </Box>{" "}
+            Admin
+          </Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary", mb: 3 }}>
+            Sign in with an administrator account.
+          </Typography>
 
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          autoComplete="email"
-          className="mb-3 w-full rounded-lg border p-3"
-        />
-        <input
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          autoComplete="current-password"
-          className="mb-3 w-full rounded-lg border p-3"
-        />
-        {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-lg bg-brand-600 px-4 py-3 font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-        >
-          {busy ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
-    </div>
+          <TextField
+            label="Email"
+            type="email"
+            fullWidth
+            required
+            margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+          />
+          <TextField
+            label="Password"
+            type="password"
+            fullWidth
+            required
+            margin="normal"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            size="large"
+            disabled={busy}
+            sx={{ mt: 3, py: 1.2 }}
+          >
+            {busy ? "Signing in…" : "Sign in"}
+          </Button>
+        </CardContent>
+      </Card>
+    </Box>
   );
 }
