@@ -15,7 +15,16 @@ import { api, getToken, setToken, type User } from "./api";
 interface AuthState {
   user: User | null;
   loading: boolean;
+  /** Passwordless demo sign-in (dev-login). */
   login: (email?: string, name?: string) => Promise<void>;
+  /** Email/password sign-in. */
+  loginWithPassword: (email: string, password: string) => Promise<void>;
+  /** Create an account with email/password. */
+  registerWithPassword: (
+    email: string,
+    name: string,
+    password: string
+  ) => Promise<void>;
   logout: () => void;
 }
 
@@ -47,13 +56,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const loginWithPassword = useCallback(
+    async (email: string, password: string) => {
+      const { access_token, user } = await api.login(email, password);
+      setToken(access_token);
+      setUser(user);
+    },
+    []
+  );
+
+  const registerWithPassword = useCallback(
+    async (email: string, name: string, password: string) => {
+      const { access_token, user } = await api.register(email, name, password);
+      setToken(access_token);
+      setUser(user);
+    },
+    []
+  );
+
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        loginWithPassword,
+        registerWithPassword,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

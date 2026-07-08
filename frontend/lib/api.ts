@@ -185,6 +185,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, name }),
     }),
+  register: (email: string, name: string, password: string) =>
+    request<{ access_token: string; user: User }>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, name, password }),
+    }),
+  login: (email: string, password: string) =>
+    request<{ access_token: string; user: User }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
   me: () => request<User>("/api/auth/me"),
   phases: () => request<Phase[]>("/api/phases"),
   phase: (id: string) => request<PhaseDetail>(`/api/phases/${id}`),
