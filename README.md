@@ -179,8 +179,11 @@ Revisions so far: `0001` initial schema · `0002` quiz tables. After editing
 
 ## Authentication & OAuth
 
-The API is guarded by a backend-issued JWT. Two ways to obtain one:
+The API is guarded by a backend-issued JWT. Three ways to obtain one:
 
+- **Email / password** — `POST /api/auth/register` (email, name, password ≥ 8
+  chars) creates an account and returns a token; `POST /api/auth/login` returns
+  one for an existing account. Passwords are stored as **bcrypt** hashes.
 - **Dev-login** (`POST /api/auth/dev-login`) — no password; always available.
 - **GitHub / Google OAuth** (Authlib) — set the client credentials in
   `backend/.env` (`GITHUB_CLIENT_ID/SECRET`, `GOOGLE_CLIENT_ID/SECRET`). The
