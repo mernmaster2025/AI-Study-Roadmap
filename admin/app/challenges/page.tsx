@@ -26,9 +26,10 @@ import {
 import AddIcon from "@mui/icons-material/AddRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
 import DeleteIcon from "@mui/icons-material/DeleteOutlineRounded";
+import CodeIcon from "@mui/icons-material/CodeRounded";
 import Shell from "@/components/Shell";
 import MarkdownEditor from "@/components/MarkdownEditor";
-import { api, type ChallengeListItem, type LessonListItem } from "@/lib/api";
+import { api, type ChallengeListItem, type LessonListItem, type Phase } from "@/lib/api";
 
 export default function ChallengesPage() {
   return (
@@ -55,37 +56,43 @@ type Draft = {
   order: number;
 };
 
-function code(sx = {}) {
-  return {
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-    fontSize: 12,
-    ...sx,
-  };
-}
+const codeSx = { fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 12 };
 
 function Challenges() {
+  const [phases, setPhases] = useState<Phase[]>([]);
+  const [phaseId, setPhaseId] = useState("");
   const [lessons, setLessons] = useState<LessonListItem[]>([]);
+  const [lessonId, setLessonId] = useState("");
   const [items, setItems] = useState<ChallengeListItem[]>([]);
-  const [filter, setFilter] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const loadItems = (lessonId: string) =>
-    api.allChallenges(lessonId || undefined).then(setItems).catch((e) => alert(e.message));
-
   useEffect(() => {
-    api.allLessons().then(setLessons);
-    loadItems("");
+    api.phases().then(setPhases);
   }, []);
 
-  const lessonLabel = (l: LessonListItem) => `P${l.phase_number} · ${l.title}`;
+  const selectPhase = (pid: string) => {
+    setPhaseId(pid);
+    setLessonId("");
+    setItems([]);
+    setLessons([]);
+    if (pid) api.allLessons(pid).then(setLessons).catch((e) => alert(e.message));
+  };
 
-  const openNew = () =>
+  const selectLesson = (lid: string) => {
+    setLessonId(lid);
+    if (lid) api.allChallenges(lid).then(setItems).catch((e) => alert(e.message));
+    else setItems([]);
+  };
+
+  const openNew = () => {
+    if (!lessonId) return;
     setDraft({
-      lesson_id: filter || lessons[0]?.id || "", title: "New challenge", description: "",
+      lesson_id: lessonId, title: "New challenge", description: "",
       difficulty: "easy", starter_code: "def solve():\n    pass\n", solution_code: "",
       testCases: "[]", hints: "[]", order: items.length,
     });
+  };
 
   const openEdit = async (item: ChallengeListItem) => {
     const c = await api.challenge(item.id);
@@ -117,7 +124,7 @@ function Challenges() {
       if (draft.id) await api.updateChallenge(draft.id, body);
       else await api.createChallenge({ lesson_id: draft.lesson_id, ...body });
       setDraft(null);
-      loadItems(filter);
+      selectLesson(lessonId);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -140,53 +147,61 @@ function Challenges() {
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
         <Typography variant="h4">Challenges</Typography>
         <Stack direction="row" spacing={2}>
-          <TextField select size="small" label="Lesson" value={filter}
-            onChange={(e) => { setFilter(e.target.value); loadItems(e.target.value); }} sx={{ width: 280 }}>
-            <MenuItem value="">All lessons</MenuItem>
-            {lessons.map((l) => (
-              <MenuItem key={l.id} value={l.id}>{lessonLabel(l)}</MenuItem>
-            ))}
+          <TextField select size="small" label="Phase" value={phaseId}
+            onChange={(e) => selectPhase(e.target.value)} sx={{ width: 200 }}>
+            {phases.map((p) => (<MenuItem key={p.id} value={p.id}>{p.phase_number}. {p.title}</MenuItem>))}
           </TextField>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openNew} disabled={!lessons.length}>
-            Add challenge
+          <TextField select size="small" label="Lesson" value={lessonId}
+            onChange={(e) => selectLesson(e.target.value)} sx={{ width: 240 }} disabled={!phaseId}>
+            {lessons.map((l) => (<MenuItem key={l.id} value={l.id}>{l.lesson_number}. {l.title}</MenuItem>))}
+          </TextField>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openNew} disabled={!lessonId}>
+            Add
           </Button>
         </Stack>
       </Stack>
 
-      <TableContainer component={Paper} variant="outlined">
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Lesson</TableCell>
-              <TableCell>Title</TableCell>
-              <TableCell>Difficulty</TableCell>
-              <TableCell align="right" />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((c) => (
-              <TableRow key={c.id} hover>
-                <TableCell sx={{ color: "text.secondary" }}>{c.lesson_title}</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>{c.title}</TableCell>
-                <TableCell>
-                  <Chip size="small" label={c.difficulty} color={DIFF_COLOR[c.difficulty] ?? "default"} variant="outlined" />
-                </TableCell>
-                <TableCell align="right">
-                  <Tooltip title="Edit">
-                    <IconButton size="small" onClick={() => openEdit(c)}><EditIcon fontSize="small" /></IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => remove(c)}><DeleteIcon fontSize="small" /></IconButton>
-                  </Tooltip>
-                </TableCell>
+      {!lessonId ? (
+        <Paper variant="outlined" sx={{ p: 6, textAlign: "center", color: "text.secondary" }}>
+          <CodeIcon sx={{ fontSize: 40, opacity: 0.5 }} />
+          <Typography sx={{ mt: 1 }}>
+            {phaseId ? "Select a lesson to view its challenges." : "Select a phase, then a lesson."}
+          </Typography>
+        </Paper>
+      ) : (
+        <TableContainer component={Paper} variant="outlined">
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Title</TableCell>
+                <TableCell width={140}>Difficulty</TableCell>
+                <TableCell align="right" />
               </TableRow>
-            ))}
-            {items.length === 0 && (
-              <TableRow><TableCell colSpan={4} align="center" sx={{ py: 5, color: "text.secondary" }}>No challenges.</TableCell></TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {items.map((c) => (
+                <TableRow key={c.id} hover>
+                  <TableCell sx={{ fontWeight: 600 }}>{c.title}</TableCell>
+                  <TableCell>
+                    <Chip size="small" label={c.difficulty} color={DIFF_COLOR[c.difficulty] ?? "default"} variant="outlined" />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Edit">
+                      <IconButton size="small" onClick={() => openEdit(c)}><EditIcon fontSize="small" /></IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton size="small" color="error" onClick={() => remove(c)}><DeleteIcon fontSize="small" /></IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {items.length === 0 && (
+                <TableRow><TableCell colSpan={3} align="center" sx={{ py: 5, color: "text.secondary" }}>No challenges in this lesson yet.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       <Dialog open={!!draft} onClose={() => setDraft(null)} maxWidth="md" fullWidth>
         <DialogTitle>{draft?.id ? "Edit challenge" : "New challenge"}</DialogTitle>
@@ -194,12 +209,6 @@ function Challenges() {
           {draft && (
             <Stack spacing={2} sx={{ pt: 1 }}>
               <Stack direction="row" spacing={2}>
-                {!draft.id && (
-                  <TextField select label="Lesson" sx={{ width: 280 }} value={draft.lesson_id}
-                    onChange={(e) => setDraft({ ...draft, lesson_id: e.target.value })}>
-                    {lessons.map((l) => (<MenuItem key={l.id} value={l.id}>{lessonLabel(l)}</MenuItem>))}
-                  </TextField>
-                )}
                 <TextField label="Title" fullWidth value={draft.title}
                   onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
                 <TextField select label="Difficulty" sx={{ width: 140 }} value={draft.difficulty}
@@ -213,15 +222,15 @@ function Challenges() {
               </Box>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                 <TextField label="Starter code" multiline minRows={5} fullWidth value={draft.starter_code}
-                  onChange={(e) => setDraft({ ...draft, starter_code: e.target.value })} InputProps={{ sx: code() }} />
+                  onChange={(e) => setDraft({ ...draft, starter_code: e.target.value })} InputProps={{ sx: codeSx }} />
                 <TextField label="Solution code" multiline minRows={5} fullWidth value={draft.solution_code}
-                  onChange={(e) => setDraft({ ...draft, solution_code: e.target.value })} InputProps={{ sx: code() }} />
+                  onChange={(e) => setDraft({ ...draft, solution_code: e.target.value })} InputProps={{ sx: codeSx }} />
               </Stack>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                 <TextField label="Test cases (JSON)" multiline minRows={4} fullWidth value={draft.testCases}
-                  onChange={(e) => setDraft({ ...draft, testCases: e.target.value })} InputProps={{ sx: code() }} />
+                  onChange={(e) => setDraft({ ...draft, testCases: e.target.value })} InputProps={{ sx: codeSx }} />
                 <TextField label="Hints (JSON)" multiline minRows={4} fullWidth value={draft.hints}
-                  onChange={(e) => setDraft({ ...draft, hints: e.target.value })} InputProps={{ sx: code() }} />
+                  onChange={(e) => setDraft({ ...draft, hints: e.target.value })} InputProps={{ sx: codeSx }} />
               </Stack>
             </Stack>
           )}

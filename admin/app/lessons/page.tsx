@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -25,6 +25,7 @@ import {
 import AddIcon from "@mui/icons-material/AddRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
 import DeleteIcon from "@mui/icons-material/DeleteOutlineRounded";
+import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
 import Shell from "@/components/Shell";
 import MarkdownEditor from "@/components/MarkdownEditor";
 import { api, type LessonListItem, type Phase } from "@/lib/api";
@@ -48,40 +49,51 @@ type Draft = {
   content_markdown: string;
 };
 
+function EmptyState({ text }: { text: string }) {
+  return (
+    <Paper variant="outlined" sx={{ p: 6, textAlign: "center", color: "text.secondary" }}>
+      <MenuBookIcon sx={{ fontSize: 40, opacity: 0.5 }} />
+      <Typography sx={{ mt: 1 }}>{text}</Typography>
+    </Paper>
+  );
+}
+
 function Lessons() {
   const [phases, setPhases] = useState<Phase[]>([]);
+  const [phaseId, setPhaseId] = useState("");
   const [lessons, setLessons] = useState<LessonListItem[]>([]);
-  const [filter, setFilter] = useState<string>("");
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const loadLessons = (phaseId: string) =>
-    api.allLessons(phaseId || undefined).then(setLessons).catch((e) => alert(e.message));
-
-  useEffect(() => {
-    // honor ?phase=<id> from the Phases page
-    const initial = new URLSearchParams(window.location.search).get("phase") ?? "";
-    setFilter(initial);
-    api.phases().then(setPhases);
-    loadLessons(initial);
-  }, []);
-
-  const changeFilter = (phaseId: string) => {
-    setFilter(phaseId);
-    loadLessons(phaseId);
+  const loadLessons = (pid: string) => {
+    if (!pid) {
+      setLessons([]);
+      return;
+    }
+    api.allLessons(pid).then(setLessons).catch((e) => alert(e.message));
   };
 
-  const phaseName = useMemo(
-    () => (id: string) => phases.find((p) => p.id === id)?.title ?? "",
-    [phases]
-  );
+  useEffect(() => {
+    const initial = new URLSearchParams(window.location.search).get("phase") ?? "";
+    api.phases().then((ps) => {
+      setPhases(ps);
+      if (initial && ps.some((p) => p.id === initial)) {
+        setPhaseId(initial);
+        loadLessons(initial);
+      }
+    });
+  }, []);
+
+  const selectPhase = (pid: string) => {
+    setPhaseId(pid);
+    loadLessons(pid);
+  };
 
   const openNew = () => {
-    const phase_id = filter || phases[0]?.id || "";
-    const inPhase = lessons.filter((l) => l.phase_id === phase_id).length;
+    if (!phaseId) return;
     setDraft({
-      phase_id, lesson_number: inPhase + 1, title: "", estimated_minutes: 20,
-      order: inPhase, description: "", content_markdown: "",
+      phase_id: phaseId, lesson_number: lessons.length + 1, title: "",
+      estimated_minutes: 20, order: lessons.length, description: "", content_markdown: "",
     });
   };
 
@@ -113,7 +125,7 @@ function Lessons() {
         });
       }
       setDraft(null);
-      loadLessons(filter);
+      loadLessons(phaseId);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -137,64 +149,65 @@ function Lessons() {
         <Typography variant="h4">Lessons</Typography>
         <Stack direction="row" spacing={2}>
           <TextField
-            select size="small" label="Phase" value={filter}
-            onChange={(e) => changeFilter(e.target.value)} sx={{ width: 240 }}
+            select size="small" label="Phase" value={phaseId}
+            onChange={(e) => selectPhase(e.target.value)} sx={{ width: 260 }}
           >
-            <MenuItem value="">All phases</MenuItem>
             {phases.map((p) => (
               <MenuItem key={p.id} value={p.id}>
                 {p.phase_number}. {p.title}
               </MenuItem>
             ))}
           </TextField>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openNew} disabled={!phases.length}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openNew} disabled={!phaseId}>
             Add lesson
           </Button>
         </Stack>
       </Stack>
 
-      <TableContainer component={Paper} variant="outlined">
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Phase</TableCell>
-              <TableCell width={50}>#</TableCell>
-              <TableCell>Title</TableCell>
-              <TableCell align="right" />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {lessons.map((l) => (
-              <TableRow key={l.id} hover>
-                <TableCell sx={{ color: "text.secondary" }}>
-                  {l.phase_number}. {l.phase_title}
-                </TableCell>
-                <TableCell>{l.lesson_number}</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>{l.title}</TableCell>
-                <TableCell align="right">
-                  <Tooltip title="Edit">
-                    <IconButton size="small" onClick={() => openEdit(l)}>
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => remove(l)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
-            {lessons.length === 0 && (
+      {!phaseId ? (
+        <EmptyState text="Select a phase to view its lessons." />
+      ) : (
+        <TableContainer component={Paper} variant="outlined">
+          <Table size="small">
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 5, color: "text.secondary" }}>
-                  No lessons.
-                </TableCell>
+                <TableCell width={50}>#</TableCell>
+                <TableCell>Title</TableCell>
+                <TableCell width={90}>Minutes</TableCell>
+                <TableCell align="right" />
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {lessons.map((l) => (
+                <TableRow key={l.id} hover>
+                  <TableCell>{l.lesson_number}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{l.title}</TableCell>
+                  <TableCell sx={{ color: "text.secondary" }}>—</TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Edit">
+                      <IconButton size="small" onClick={() => openEdit(l)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton size="small" color="error" onClick={() => remove(l)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {lessons.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} align="center" sx={{ py: 5, color: "text.secondary" }}>
+                    No lessons in this phase yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       <Dialog open={!!draft} onClose={() => setDraft(null)} maxWidth="md" fullWidth>
         <DialogTitle>{draft?.id ? "Edit lesson" : "New lesson"}</DialogTitle>
@@ -202,16 +215,6 @@ function Lessons() {
           {draft && (
             <Stack spacing={2} sx={{ pt: 1 }}>
               <Stack direction="row" spacing={2}>
-                {!draft.id && (
-                  <TextField
-                    select label="Phase" sx={{ width: 220 }} value={draft.phase_id}
-                    onChange={(e) => setDraft({ ...draft, phase_id: e.target.value })}
-                  >
-                    {phases.map((p) => (
-                      <MenuItem key={p.id} value={p.id}>{p.phase_number}. {p.title}</MenuItem>
-                    ))}
-                  </TextField>
-                )}
                 <TextField
                   label="Minutes" type="number" sx={{ width: 120 }} value={draft.estimated_minutes}
                   onChange={(e) => setDraft({ ...draft, estimated_minutes: Number(e.target.value) })}
@@ -219,6 +222,10 @@ function Lessons() {
                 <TextField
                   label="Order" type="number" sx={{ width: 110 }} value={draft.order}
                   onChange={(e) => setDraft({ ...draft, order: Number(e.target.value) })}
+                />
+                <TextField
+                  label="Lesson #" type="number" sx={{ width: 110 }} value={draft.lesson_number}
+                  onChange={(e) => setDraft({ ...draft, lesson_number: Number(e.target.value) })}
                 />
               </Stack>
               <TextField label="Title" fullWidth value={draft.title}
